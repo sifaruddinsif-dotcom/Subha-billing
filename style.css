@@ -1180,32 +1180,62 @@ button{
 
 }
 
-/* FINAL INVOICE TABLE READABILITY */
+/* FINAL INVOICE TABLE — CLEAN TALLY ERP 9 LAYOUT */
+.tally-items{
+  width:100%;
+  table-layout:fixed;
+}
 .tally-items th,
 .tally-items td{
   padding:3px 2px;
+  vertical-align:middle;
+  word-break:normal;
 }
 .tally-items th{
-  font-size:7.5px;
+  font-size:7.2px;
   line-height:1.15;
   white-space:normal;
-  overflow-wrap:anywhere;
+  overflow-wrap:normal;
+  word-break:normal;
+  text-align:center;
 }
 .tally-items td{
   font-size:8px;
   line-height:1.2;
 }
+.tally-items th:nth-child(1){width:4%}
+.tally-items th:nth-child(2){width:21%}
+.tally-items th:nth-child(3){width:7%}
+.tally-items th:nth-child(4){width:5%}
+.tally-items th:nth-child(5){width:5%}
+.tally-items th:nth-child(6){width:8%}
+.tally-items th:nth-child(7){width:5%}
+.tally-items th:nth-child(8){width:10%}
+.tally-items th:nth-child(9){width:6%}
+.tally-items th:nth-child(10){width:6%}
+.tally-items th:nth-child(11){width:6%}
+.tally-items th:nth-child(12){width:6%}
+.tally-items th:nth-child(13){width:11%}
+
 .tally-items th:nth-child(9),
 .tally-items th:nth-child(10),
 .tally-items th:nth-child(11),
 .tally-items th:nth-child(12){
   font-size:7px;
+  white-space:normal;
+  word-break:normal;
+  overflow-wrap:normal;
 }
+
 @media print{
   .tally-items th,
   .tally-items td{
     padding:2.5px 2px;
   }
-  .tally-items th{font-size:7px}
-  .tally-items td{font-size:7.8px}
+  .tally-items th{
+    font-size:7px;
+  }
+  .tally-items td{
+    font-size:7.8px;
+  }
 }
