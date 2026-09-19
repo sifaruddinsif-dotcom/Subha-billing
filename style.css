@@ -947,18 +947,18 @@ button{
 }
 
 .tally-items th:nth-child(1){width:4%}
-.tally-items th:nth-child(2){width:22%}
-.tally-items th:nth-child(3){width:8%}
+.tally-items th:nth-child(2){width:20%}
+.tally-items th:nth-child(3){width:7%}
 .tally-items th:nth-child(4){width:5%}
 .tally-items th:nth-child(5){width:5%}
 .tally-items th:nth-child(6){width:8%}
-.tally-items th:nth-child(7){width:6%}
+.tally-items th:nth-child(7){width:5%}
 .tally-items th:nth-child(8){width:10%}
-.tally-items th:nth-child(9){width:6%}
+.tally-items th:nth-child(9){width:5%}
 .tally-items th:nth-child(10){width:7%}
-.tally-items th:nth-child(11){width:6%}
+.tally-items th:nth-child(11){width:5%}
 .tally-items th:nth-child(12){width:7%}
-.tally-items th:nth-child(13){width:11%}
+.tally-items th:nth-child(13){width:12%}
 
 .center{
   text-align:center;
@@ -1178,4 +1178,34 @@ button{
     border:1px solid #111;
   }
 
+}
+
+/* FINAL INVOICE TABLE READABILITY */
+.tally-items th,
+.tally-items td{
+  padding:3px 2px;
+}
+.tally-items th{
+  font-size:7.5px;
+  line-height:1.15;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.tally-items td{
+  font-size:8px;
+  line-height:1.2;
+}
+.tally-items th:nth-child(9),
+.tally-items th:nth-child(10),
+.tally-items th:nth-child(11),
+.tally-items th:nth-child(12){
+  font-size:7px;
+}
+@media print{
+  .tally-items th,
+  .tally-items td{
+    padding:2.5px 2px;
+  }
+  .tally-items th{font-size:7px}
+  .tally-items td{font-size:7.8px}
 }
