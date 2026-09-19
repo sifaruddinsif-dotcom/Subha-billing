@@ -2018,7 +2018,7 @@ async function viewInvoice(id){
             </th>
 
             <th>
-              Amount
+              CGST<br>Amount
             </th>
 
             <th>
@@ -2026,7 +2026,7 @@ async function viewInvoice(id){
             </th>
 
             <th>
-              Amount
+              SGST<br>Amount
             </th>
 
           </tr>
