@@ -1964,6 +1964,22 @@ async function viewInvoice(id){
 
       <table class="tally-table tally-items">
 
+        <colgroup>
+          <col style="width:4%">
+          <col style="width:22%">
+          <col style="width:7%">
+          <col style="width:5%">
+          <col style="width:5%">
+          <col style="width:8%">
+          <col style="width:5%">
+          <col style="width:10%">
+          <col style="width:6%">
+          <col style="width:6%">
+          <col style="width:6%">
+          <col style="width:6%">
+          <col style="width:10%">
+        </colgroup>
+
         <thead>
 
           <tr>
@@ -2013,21 +2029,10 @@ async function viewInvoice(id){
 
           <tr>
 
-            <th>
-              CGST<br>Rate
-            </th>
-
-            <th>
-              CGST<br>Amount
-            </th>
-
-            <th>
-              SGST<br>Rate
-            </th>
-
-            <th>
-              SGST<br>Amount
-            </th>
+            <th>CGST<br>%</th>
+            <th>CGST<br>Amt.</th>
+            <th>SGST<br>%</th>
+            <th>SGST<br>Amt.</th>
 
           </tr>
 
