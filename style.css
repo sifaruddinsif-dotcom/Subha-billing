@@ -1185,6 +1185,19 @@ button{
   width:100%;
   table-layout:fixed;
 }
+.tally-items col:nth-child(1){width:4%}
+.tally-items col:nth-child(2){width:22%}
+.tally-items col:nth-child(3){width:7%}
+.tally-items col:nth-child(4){width:5%}
+.tally-items col:nth-child(5){width:5%}
+.tally-items col:nth-child(6){width:8%}
+.tally-items col:nth-child(7){width:5%}
+.tally-items col:nth-child(8){width:10%}
+.tally-items col:nth-child(9),
+.tally-items col:nth-child(10),
+.tally-items col:nth-child(11),
+.tally-items col:nth-child(12){width:6%}
+.tally-items col:nth-child(13){width:10%}
 .tally-items th,
 .tally-items td{
   padding:3px 2px;
@@ -1222,7 +1235,7 @@ button{
 .tally-items th:nth-child(11),
 .tally-items th:nth-child(12){
   font-size:7px;
-  white-space:normal;
+  white-space:nowrap;
   word-break:normal;
   overflow-wrap:normal;
 }
