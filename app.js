@@ -1527,451 +1527,733 @@ async function saveInvoice(rows){
    TALLY ERP 9 STYLE INVOICE
 ========================= */
 
+function amountInWordsINR(value){
+
+  let n = Math.round(Number(value) || 0);
+
+  if(n === 0) return 'Zero Rupees Only';
+
+  const ones = [
+    '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
+    'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
+    'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+    'Seventeen', 'Eighteen', 'Nineteen'
+  ];
+
+  const tens = [
+    '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty',
+    'Sixty', 'Seventy', 'Eighty', 'Ninety'
+  ];
+
+  function two(x){
+
+    if(x < 20) return ones[x];
+
+    return tens[Math.floor(x / 10)] +
+      (x % 10 ? ' ' + ones[x % 10] : '');
+  }
+
+  function three(x){
+
+    if(x < 100) return two(x);
+
+    return ones[Math.floor(x / 100)] +
+      ' Hundred' +
+      (x % 100 ? ' ' + two(x % 100) : '');
+  }
+
+  const parts = [];
+
+  if(n >= 10000000){
+
+    parts.push(
+      three(Math.floor(n / 10000000)) + ' Crore'
+    );
+
+    n %= 10000000;
+  }
+
+  if(n >= 100000){
+
+    parts.push(
+      three(Math.floor(n / 100000)) + ' Lakh'
+    );
+
+    n %= 100000;
+  }
+
+  if(n >= 1000){
+
+    parts.push(
+      three(Math.floor(n / 1000)) + ' Thousand'
+    );
+
+    n %= 1000;
+  }
+
+  if(n > 0){
+    parts.push(three(n));
+  }
+
+  return parts.join(' ') + ' Rupees Only';
+}
+
+
 async function viewInvoice(id){
 
-  const i=await api('/invoices/'+id);
+  const i = await api('/invoices/' + id);
 
-  const items=(i.items||[]).map((x,n)=>`
+  const business = state.settings || {};
 
-    <tr>
+  const isIGST = Number(i.igst || 0) > 0;
 
-      <td>${n+1}</td>
+  const customerName =
+    i.customer || 'Walk-in Customer';
 
-      <td>
-        <b>${x.name||'-'}</b>
-      </td>
+  const customerAddress =
+    i.address || '';
 
-      <td>
-        ${x.hsn||'-'}
-      </td>
+  const customerPhone =
+    i.phone || '-';
 
-      <td>
-        ${x.qty||0}
-      </td>
+  const customerGstin =
+    i.gstin || '-';
 
-      <td>
-        ${x.unit||'PCS'}
-      </td>
+  const supplyState =
+    i.state || business.state || '-';
 
-      <td>
-        ${money(x.rate)}
-      </td>
 
-      <td>
-        ${money(x.discount)}
-      </td>
+  const items = (i.items || []).map((x,n) => {
 
-      <td>
-        ${money(x.taxable)}
-      </td>
+    const base =
+      Number(x.taxable) || 0;
 
-      <td>
-        ${money(x.cgst)}
-      </td>
+    const tax =
+      Number(x.tax) || 0;
 
-      <td>
-        ${money(x.sgst)}
-      </td>
+    const rate =
+      Number(x.rate) || 0;
 
-      <td>
-        ${money(x.igst)}
-      </td>
+    const qty =
+      Number(x.qty) || 0;
 
-      <td>
-        <b>${money(x.total)}</b>
-      </td>
+    const discount =
+      Number(x.discount) || 0;
 
-    </tr>
+    const gross =
+      qty * rate;
 
-  `).join('');
+    const discPct =
+      gross > 0
+        ? (discount / gross * 100)
+        : 0;
 
-  $('#modalbox').innerHTML=`
+    const gstRate =
+      Number(x.gst) || 0;
+
+    const cgst =
+      isIGST ? 0 : tax / 2;
+
+    const sgst =
+      isIGST ? 0 : tax / 2;
+
+    const total =
+      Number(x.total) || 0;
+
+
+    return `
+
+      <tr>
+
+        <td class="center">
+          ${n + 1}
+        </td>
+
+        <td>
+          <b>${x.name || '-'}</b>
+        </td>
+
+        <td class="center">
+          ${x.hsn || '-'}
+        </td>
+
+        <td class="right">
+          ${qty}
+        </td>
+
+        <td class="center">
+          ${x.unit || 'PCS'}
+        </td>
+
+        <td class="right">
+          ${money(rate)}
+        </td>
+
+        <td class="right">
+          ${discPct.toFixed(2)}
+        </td>
+
+        <td class="right">
+          ${money(base)}
+        </td>
+
+        <td class="center">
+          ${
+            isIGST
+              ? '-'
+              : (gstRate / 2).toFixed(2) + '%'
+          }
+        </td>
+
+        <td class="right">
+          ${
+            isIGST
+              ? '-'
+              : money(cgst)
+          }
+        </td>
+
+        <td class="center">
+          ${
+            isIGST
+              ? '-'
+              : (gstRate / 2).toFixed(2) + '%'
+          }
+        </td>
+
+        <td class="right">
+          ${
+            isIGST
+              ? '-'
+              : money(sgst)
+          }
+        </td>
+
+        <td class="right">
+          <b>
+            ${money(total)}
+          </b>
+        </td>
+
+      </tr>
+
+    `;
+
+  }).join('');
+
+
+  $('#modalbox').innerHTML = `
 
     <div class="toolbar no-print">
 
       <h3>
-        Invoice ${i.invoice_no}
+        Invoice ${i.invoice_no || ''}
       </h3>
 
-      <button
-        class="btn primary"
-        onclick="window.print()"
-      >
-        🖨 Print / Save PDF
-      </button>
+      <div class="actions">
 
-      <button
-        class="btn"
-        onclick="closeModal()"
-      >
-        Close
-      </button>
+        <button
+          class="btn primary"
+          onclick="window.print()"
+        >
+          🖨 Print / Save PDF
+        </button>
+
+        <button
+          class="btn"
+          onclick="closeModal()"
+        >
+          Close
+        </button>
+
+      </div>
 
     </div>
 
+
     <div class="invoice-print tally-invoice">
 
-      <!-- BUSINESS HEADER -->
 
-      <div class="tally-header">
+      <!-- HEADER -->
 
-        <div>
+      <div class="tally-top">
+
+
+        <div class="tally-company">
+
+          <div class="company-logo">
+
+            <div class="logo-mark">
+              S3
+            </div>
+
+            <div class="logo-name">
+              SUBHA
+            </div>
+
+            <div class="logo-billing">
+              BILLING
+            </div>
+
+          </div>
+
+
+          <div class="company-details">
+
+            <div class="company-name">
+              ${
+                business.business_name ||
+                'SUBHA BILLING'
+              }
+            </div>
+
+            <div>
+              ${business.address || ''}
+            </div>
+
+            <div>
+              Phone : ${business.phone || '-'}
+            </div>
+
+            <div>
+              E-mail : ${business.email || '-'}
+            </div>
+
+            <div>
+              Website : ${business.website || '-'}
+            </div>
+
+            <div>
+              <b>
+                GSTIN : ${business.gstin || '-'}
+              </b>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="tax-title">
 
           <h1>
-            ${
-              state.settings.business_name||
-              'SUBHA BILLING'
-            }
+            TAX INVOICE
           </h1>
 
-          <div>
-            ${state.settings.address||''}
-          </div>
-
-          <div>
-            Phone:
-            ${state.settings.phone||'-'}
-            |
-            Email:
-            ${state.settings.email||'-'}
-          </div>
-
-          <div>
-            <b>
-              GSTIN:
-              ${state.settings.gstin||'-'}
-            </b>
-          </div>
-
-          <div>
-            State:
-            ${state.settings.state||'-'}
-          </div>
+          <em>
+            (ORIGINAL FOR RECIPIENT)
+          </em>
 
         </div>
 
-        <div class="invoice-heading">
 
-          <h2>
-            TAX INVOICE
-          </h2>
+        <!-- INVOICE DETAILS -->
 
-          <b>
-            ORIGINAL FOR RECIPIENT
-          </b>
+        <div class="invoice-meta">
+
+          <div>
+            <span>Invoice No.</span>
+            <b>${i.invoice_no || '-'}</b>
+          </div>
+
+          <div>
+            <span>Dated</span>
+            <b>${i.created_at || '-'}</b>
+          </div>
+
+          <div>
+            <span>Delivery Note</span>
+            <b>${i.delivery_note || '—'}</b>
+          </div>
+
+          <div>
+            <span>Mode/Terms of Payment</span>
+            <b>${i.payment_mode || '—'}</b>
+          </div>
+
+          <div>
+            <span>Reference No. & Date</span>
+            <b>${i.reference_no || '—'}</b>
+          </div>
+
+          <div>
+            <span>Other References</span>
+            <b>${i.other_references || '—'}</b>
+          </div>
+
+          <div>
+            <span>Buyer's Order No.</span>
+            <b>${i.buyer_order_no || '—'}</b>
+          </div>
+
+          <div>
+            <span>Dated</span>
+            <b>${i.buyer_order_date || '—'}</b>
+          </div>
+
+          <div>
+            <span>Dispatch Doc No.</span>
+            <b>${i.dispatch_doc_no || '—'}</b>
+          </div>
+
+          <div>
+            <span>Delivery Note Date</span>
+            <b>${i.delivery_note_date || '—'}</b>
+          </div>
+
+          <div>
+            <span>Dispatched through</span>
+            <b>${i.dispatched_through || '—'}</b>
+          </div>
+
+          <div>
+            <span>Destination</span>
+            <b>${i.destination || '—'}</b>
+          </div>
+
+          <div class="meta-wide">
+            <span>Terms of Delivery</span>
+            <b>${i.terms_of_delivery || '—'}</b>
+          </div>
 
         </div>
 
       </div>
 
-      <!-- INVOICE INFO -->
 
-      <div class="invoice-info">
+      <!-- BILL TO -->
 
-        <div>
-          <b>Invoice No.</b>
-          <br>
-          ${i.invoice_no||'-'}
-        </div>
-
-        <div>
-          <b>Invoice Date</b>
-          <br>
-          ${i.created_at||'-'}
-        </div>
-
-        <div>
-          <b>Payment Mode</b>
-          <br>
-          ${i.payment_mode||'-'}
-        </div>
-
-        <div>
-          <b>Tax Type</b>
-          <br>
-          ${
-            i.tax_type==='IGST'
-            ?'IGST'
-            :'CGST + SGST'
-          }
-        </div>
-
-      </div>
-
-      <!-- CUSTOMER -->
-
-      <div class="bill-section">
+      <div class="bill-to-box">
 
         <div>
 
-          <h4>
-            BILL TO
-          </h4>
+          <div class="section-label">
+            Bill To
+          </div>
 
-          <b>
-            ${i.customer||'Walk-in Customer'}
-          </b>
+          <strong>
+            ${customerName}
+          </strong>
 
-          <br>
+          <div>
+            ${customerAddress}
+          </div>
 
-          ${i.address||''}
+          <div>
+            GSTIN : ${customerGstin}
+          </div>
 
-          <br>
+          <div>
+            State : ${supplyState}
+          </div>
 
-          Phone:
-          ${i.phone||'-'}
+          <div>
+            Phone : ${customerPhone}
+          </div>
 
-          <br>
-
-          GSTIN:
-          ${i.gstin||'-'}
-
-        </div>
-
-        <div>
-
-          <h4>
-            PLACE OF SUPPLY
-          </h4>
-
-          State:
-          ${
-            i.state||
-            state.settings.state||
-            '-'
-          }
-
-          <br>
-
-          GSTIN:
-          ${i.gstin||'-'}
-
-          <br>
-
-          Invoice Ref:
-          ${i.invoice_no||'-'}
+          <div>
+            Place of Supply : ${supplyState}
+          </div>
 
         </div>
 
       </div>
 
-      <!-- ITEMS -->
 
-      <table class="tally-table">
+      <!-- ITEM TABLE -->
+
+      <table class="tally-table tally-items">
 
         <thead>
 
           <tr>
 
-            <th>Sl.</th>
+            <th rowspan="2">
+              Sl<br>No.
+            </th>
 
-            <th>
+            <th rowspan="2">
               Description of Goods / Services
             </th>
 
-            <th>
+            <th rowspan="2">
               HSN/SAC
             </th>
 
-            <th>
-              Qty
+            <th rowspan="2">
+              Qty.
             </th>
 
-            <th>
+            <th rowspan="2">
               Unit
             </th>
 
-            <th>
+            <th rowspan="2">
               Rate
             </th>
 
+            <th rowspan="2">
+              Disc. %
+            </th>
+
+            <th rowspan="2">
+              Taxable<br>Value
+            </th>
+
+            <th colspan="4">
+              Tax Amount
+            </th>
+
+            <th rowspan="2">
+              Total Amount<br>(₹)
+            </th>
+
+          </tr>
+
+
+          <tr>
+
             <th>
-              Disc.
+              CGST<br>Rate
             </th>
 
             <th>
-              Taxable Value
+              Amount
             </th>
 
             <th>
-              CGST
+              SGST<br>Rate
             </th>
 
             <th>
-              SGST
-            </th>
-
-            <th>
-              IGST
-            </th>
-
-            <th>
-              Total Amount
+              Amount
             </th>
 
           </tr>
 
         </thead>
 
+
         <tbody>
+
           ${items}
+
         </tbody>
 
       </table>
 
-      <!-- TOTALS / BANK -->
 
-      <div class="invoice-footer-grid">
+      <!-- TOTAL -->
 
-        <div>
+      <div class="amount-total-row">
 
-          <h4>
-            AMOUNT IN WORDS
-          </h4>
 
-          <b>
-            Rupees
-            ${Number(i.total||0).toLocaleString('en-IN')}
-            Only
-          </b>
+        <div class="amount-words">
 
-          <h4>
-            BANK DETAILS
-          </h4>
+          <div class="section-label">
+            Amount Chargeable (in words)
+          </div>
 
-          Bank Name:
-          __________________________
-
-          <br>
-
-          A/c No.:
-          _____________________________
-
-          <br>
-
-          IFSC:
-          ________________________________
-
-          <br>
-
-          UPI:
-          __________________________________
-
-          <h4>
-            TERMS & CONDITIONS
-          </h4>
-
-          1. Goods once sold will not be
-          returned unless agreed otherwise.
-
-          <br>
-
-          2. Payment is due as per agreed
-          credit terms.
-
-          <br>
-
-          3. Subject to applicable GST rules
-          and jurisdiction.
+          <strong>
+            ${amountInWordsINR(i.total)}
+          </strong>
 
         </div>
 
-        <div class="invoice-totals">
+
+        <div class="summary-total">
 
           <div>
-            <span>Subtotal</span>
-            <b>${money(i.subtotal)}</b>
-          </div>
-
-          <div>
-            <span>Discount</span>
-            <b>${money(i.discount)}</b>
-          </div>
-
-          <div>
-            <span>Taxable Value</span>
-            <b>${money(i.taxable)}</b>
-          </div>
-
-          <div>
-            <span>CGST</span>
-            <b>${money(i.cgst)}</b>
-          </div>
-
-          <div>
-            <span>SGST</span>
-            <b>${money(i.sgst)}</b>
-          </div>
-
-          <div>
-            <span>IGST</span>
-            <b>${money(i.igst)}</b>
-          </div>
-
-          <div>
-            <span>Round Off</span>
-            <b>${money(i.roundoff)}</b>
-          </div>
-
-          <div class="grand-total">
-
             <span>
-              GRAND TOTAL
+              Total Taxable Value
             </span>
 
             <b>
-              ${money(i.total)}
+              ${money(i.taxable)}
             </b>
-
           </div>
 
-          <div>
-            <span>Paid</span>
-            <b>${money(i.paid)}</b>
-          </div>
 
           <div>
-            <span>Balance Due</span>
+            <span>
+              Total CGST
+            </span>
+
             <b>
-              ${money(i.total-i.paid)}
+              ${money(i.cgst)}
             </b>
+          </div>
+
+
+          <div>
+            <span>
+              Total SGST
+            </span>
+
+            <b>
+              ${money(i.sgst)}
+            </b>
+          </div>
+
+
+          <div>
+            <span>
+              Total IGST
+            </span>
+
+            <b>
+              ${money(i.igst)}
+            </b>
+          </div>
+
+
+          <div>
+            <span>
+              Round Off
+            </span>
+
+            <b>
+              ${money(i.roundoff)}
+            </b>
+          </div>
+
+
+          <div class="grand-total-row">
+
+            <span>
+              Grand Total
+            </span>
+
+            <b>
+              ₹ ${money(i.total)}
+            </b>
+
+          </div>
+
+
+          <div class="eoe">
+            (E & O.E)
           </div>
 
         </div>
 
       </div>
 
-      <!-- SIGNATURE -->
 
-      <div class="signature-section">
+      <!-- BANK / TERMS / SIGNATURE -->
 
-        <div>
+      <div class="bottom-three">
 
-          Customer Signature
 
-          <div class="signature-line"></div>
+        <div class="bank-box">
+
+          <div class="section-label">
+            Company's Bank Details
+          </div>
+
+          <div>
+            Bank Name :
+            ${business.bank_name || '—'}
+          </div>
+
+          <div>
+            A/c No. :
+            ${business.bank_account || '—'}
+          </div>
+
+          <div>
+            IFSC Code :
+            ${business.ifsc || '—'}
+          </div>
+
+          <div>
+            Branch :
+            ${business.branch || '—'}
+          </div>
 
         </div>
 
-        <div>
 
-          For
-          <b>
-            ${
-              state.settings.business_name||
-              'SUBHA BILLING'
-            }
-          </b>
+        <div class="terms-box">
 
-          <div class="signature-line"></div>
+          <div class="section-label">
+            Terms & Conditions
+          </div>
 
-          <b>
+          <div>
+            1. Goods once sold will not be taken back.
+          </div>
+
+          <div>
+            2. Payment is due as per agreed credit terms.
+          </div>
+
+          <div>
+            3. All disputes are subject to
+            ${supplyState} Jurisdiction.
+          </div>
+
+          <div>
+            4. Payment to be made within 15 days.
+          </div>
+
+        </div>
+
+
+        <div class="authorised-box">
+
+          <div>
+            For
+            <strong>
+              ${
+                business.business_name ||
+                'SUBHA BILLING'
+              }
+            </strong>
+          </div>
+
+          <div class="seal">
+            S3
+          </div>
+
+          <div class="sign-line"></div>
+
+          <strong>
             Authorised Signatory
-          </b>
+          </strong>
 
         </div>
 
       </div>
+
+
+      <!-- DECLARATION -->
+
+      <div class="declaration-row">
+
+        <div>
+
+          <b>₹</b>
+
+          We declare that this invoice shows the actual
+          price of the goods described and that all
+          particulars are true and correct.
+
+        </div>
+
+
+        <div>
+
+          <b>
+            Receiver's Signature
+          </b>
+
+          <div class="dotted-sign"></div>
+
+        </div>
+
+      </div>
+
 
       <div class="computer-generated">
 
@@ -1979,481 +2261,11 @@ async function viewInvoice(id){
 
       </div>
 
+
     </div>
 
   `;
 
   openModal();
-}
-
-/* =========================
-   PAYMENTS
-========================= */
-
-async function payments(){
-
-  const p=await api('/payments');
-
-  $('#content').innerHTML=
-
-    header(
-      'Payments',
-      `
-      <button
-        class="btn primary"
-        onclick="receivePayment()"
-      >
-        ＋ Receive Payment
-      </button>
-      `
-    )
-
-    +
-
-    `
-
-    <div class="panel">
-
-      <div class="tablewrap">
-
-        <table class="table">
-
-          <thead>
-
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Invoice</th>
-              <th>Amount</th>
-              <th>Mode</th>
-              <th>Reference</th>
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            ${p.map(x=>`
-
-              <tr>
-
-                <td>${x.created_at}</td>
-                <td>${x.customer}</td>
-                <td>${x.invoice_no||'-'}</td>
-                <td>${money(x.amount)}</td>
-                <td>${x.mode}</td>
-                <td>${x.reference||'-'}</td>
-
-              </tr>
-
-            `).join('')}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-    `;
-}
-
-async function receivePayment(){
-
-  const inv=await api('/invoices');
-
-  $('#modalbox').innerHTML=`
-
-    <div class="toolbar">
-
-      <h3>
-        Receive Payment
-      </h3>
-
-      <button
-        class="btn"
-        onclick="closeModal()"
-      >
-        ×
-      </button>
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        Invoice
-      </label>
-
-      <select id="payinv">
-
-        ${inv
-          .filter(i=>i.total>i.paid)
-          .map(i=>`
-
-            <option value="${i.id}">
-              ${i.invoice_no}
-              —
-              ${i.customer}
-              —
-              Balance
-              ${money(i.total-i.paid)}
-            </option>
-
-          `).join('')}
-
-      </select>
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        Amount
-      </label>
-
-      <input
-        id="payamt"
-        type="number"
-      >
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        Mode
-      </label>
-
-      <select id="paymode">
-
-        <option>Cash</option>
-        <option>UPI</option>
-        <option>Bank</option>
-        <option>Card</option>
-
-      </select>
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        Reference
-      </label>
-
-      <input id="payref">
-
-    </div>
-
-    <button
-      class="btn primary"
-      onclick="savePayment()"
-    >
-      Save Payment
-    </button>
-
-  `;
-
-  openModal();
-}
-
-async function savePayment(){
-
-  try{
-
-    await api(
-      '/invoices/'+$('#payinv').value+'/payment',
-      {
-        method:'POST',
-
-        body:JSON.stringify({
-          amount:Number($('#payamt').value),
-          mode:$('#paymode').value,
-          reference:$('#payref').value
-        })
-      }
-    );
-
-    closeModal();
-
-    payments();
-
-    toast('Payment recorded');
-
-  }catch(e){
-
-    alert(e.message);
-
-  }
-}
-
-/* =========================
-   REPORTS
-========================= */
-
-async function reports(){
-
-  const rows=await api('/reports/sales');
-
-  $('#content').innerHTML=
-
-    header(
-      'Sales Reports',
-      `
-      <button
-        class="btn"
-        onclick="downloadCSV()"
-      >
-        Export Invoices CSV
-      </button>
-      `
-    )
-
-    +
-
-    `
-
-    <div class="panel">
-
-      <table class="table">
-
-        <thead>
-
-          <tr>
-
-            <th>Date</th>
-            <th>Invoices</th>
-            <th>Subtotal</th>
-            <th>Discount</th>
-            <th>Tax</th>
-            <th>Total</th>
-            <th>Paid</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          ${rows.map(x=>`
-
-            <tr>
-
-              <td>${x.date}</td>
-              <td>${x.invoices}</td>
-              <td>${money(x.subtotal)}</td>
-              <td>${money(x.discount)}</td>
-              <td>${money(x.tax)}</td>
-              <td>${money(x.total)}</td>
-              <td>${money(x.paid)}</td>
-
-            </tr>
-
-          `).join('')}
-
-        </tbody>
-
-      </table>
-
-    </div>
-    `;
-}
-
-/* =========================
-   GST REPORT
-========================= */
-
-async function gst(){
-
-  const rows=await api('/reports/gst');
-
-  $('#content').innerHTML=
-
-    header('GST Reports')
-
-    +
-
-    `
-
-    <div class="panel">
-
-      <table class="table">
-
-        <thead>
-
-          <tr>
-
-            <th>Date</th>
-            <th>Taxable</th>
-            <th>CGST</th>
-            <th>SGST</th>
-            <th>IGST</th>
-            <th>Total</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          ${rows.map(x=>`
-
-            <tr>
-
-              <td>${x.date}</td>
-              <td>${money(x.taxable)}</td>
-              <td>${money(x.cgst)}</td>
-              <td>${money(x.sgst)}</td>
-              <td>${money(x.igst)}</td>
-              <td>${money(x.total)}</td>
-
-            </tr>
-
-          `).join('')}
-
-        </tbody>
-
-      </table>
-
-    </div>
-    `;
-}
-
-/* =========================
-   SETTINGS
-========================= */
-
-function settingsPage(){
-
-  $('#content').innerHTML=
-
-    header('Settings')
-
-    +
-
-    `
-
-    <div class="panel">
-
-      <div class="formgrid">
-
-        ${[
-          ['business_name','Business Name'],
-          ['tagline','Tagline'],
-          ['gstin','GSTIN'],
-          ['address','Business Address'],
-          ['phone','Phone'],
-          ['email','Email'],
-          ['invoice_prefix','Invoice Prefix'],
-          ['state','State']
-        ].map(f=>`
-
-          <div class="field">
-
-            <label>
-              ${f[1]}
-            </label>
-
-            <input
-              id="s_${f[0]}"
-              value="${state.settings[f[0]]||''}"
-            >
-
-          </div>
-
-        `).join('')}
-
-      </div>
-
-      <button
-        class="btn primary"
-        onclick="saveSettings()"
-      >
-        Save Settings
-      </button>
-
-    </div>
-    `;
-}
-
-async function saveSettings(){
-
-  const o={};
-
-  [
-    'business_name',
-    'tagline',
-    'gstin',
-    'address',
-    'phone',
-    'email',
-    'invoice_prefix',
-    'state'
-  ].forEach(k=>{
-    o[k]=$('#s_'+k).value;
-  });
-
-  state.settings=await api(
-    '/settings',
-    {
-      method:'PUT',
-      body:JSON.stringify(o)
-    }
-  );
-
-  toast('Settings saved');
-
-  go('dashboard');
-}
-
-/* =========================
-   MODAL
-========================= */
-
-function openModal(){
-
-  $('#modal').classList.add('open');
 
 }
-
-function closeModal(){
-
-  $('#modal').classList.remove('open');
-
-}
-
-/* =========================
-   CSV
-========================= */
-
-function downloadCSV(){
-
-  window.open(
-    '/api/export/invoices.csv?token='+token,
-    '_blank'
-  );
-
-}
-
-/* =========================
-   SEARCH
-========================= */
-
-function globalSearch(v){
-
-  /*
-    Global search hook.
-    Existing API/pages remain unchanged.
-  */
-
-}
-
-/* =========================
-   START APPLICATION
-========================= */
-
-if(token)
-  boot();
-else
-  login();
