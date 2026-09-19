@@ -1260,54 +1260,54 @@ button{
 }
 
 /* FINAL MASTER REFERENCE A4 TALLY ERP 9 INVOICE */
-.invoice-print.tally-invoice{width:190mm!important;margin:0 auto!important;background:#fff!important;color:#111!important;border:1px solid #111!important;font-family:Arial,Helvetica,sans-serif!important;font-size:10px!important;line-height:1.3!important}
+.invoice-print.tally-invoice{width:190mm!important;margin:0 auto!important;background:#fff!important;color:#111!important;border:1px solid #111!important;font-family:Arial,Helvetica,sans-serif!important;font-size:10px!important;line-height:1.25!important}
 .invoice-print.tally-invoice *{box-sizing:border-box}
-.tally-top{display:grid!important;grid-template-columns:62% 38%!important;border-bottom:1px solid #111!important;min-height:0!important}
-.tally-left{border-right:1px solid #111!important}
-.company-tax-row{display:grid!important;grid-template-columns:24% 43% 33%!important;min-height:38mm!important;border-bottom:1px solid #111!important}
+.tally-top{display:grid!important;grid-template-columns:66% 34%!important;border-bottom:1px solid #111!important}
+.tally-left{border-right:1px solid #111!important;min-width:0}
+.company-tax-row{display:grid!important;grid-template-columns:22% 46% 32%!important;min-height:35mm!important;border-bottom:1px solid #111!important}
 .brand-box{text-align:center;padding:5px 2px}
-.s3-logo{font-size:40px;font-weight:900;line-height:40px;color:#173b72}
-.subha-word{font-size:21px;font-weight:800;color:#173b72;line-height:24px}
-.billing-word{font-size:15px;font-weight:800;color:#c62828;letter-spacing:1.5px}
-.company-details{padding:7px 3px;font-size:9.2px;line-height:1.7}
-.company-name{font-size:16px!important;font-weight:800;color:#173b72;margin-bottom:3px}
-.tax-title{text-align:center;padding:10px 2px}
-.tax-title h1{font-size:19px!important;margin:3px 0 4px!important;font-weight:800}
-.tax-title em{font-size:10px}
-.invoice-meta{display:grid!important;grid-template-columns:1fr 1fr!important;border-left:0!important}
-.invoice-meta>div{min-height:10mm!important;padding:3.5px 5px!important;border-bottom:1px solid #111!important;border-right:1px solid #111!important;overflow:hidden!important}
-.invoice-meta span{display:block;font-size:8.5px!important;line-height:1.15!important;margin-bottom:2px!important}
-.invoice-meta b{display:block;font-size:8.5px!important;line-height:1.2!important;overflow-wrap:anywhere}
-.invoice-meta .meta-wide{grid-column:1/3;min-height:9mm!important}
-.bill-to-box{min-height:40mm!important;border-bottom:0!important;padding:6px 8px!important}
-.bill-to-box .bill-title{font-size:9px;font-weight:700;margin-bottom:4px}
-.bill-to-box b{font-size:11px}
-.bill-to-box>div:not(.bill-title){line-height:1.6}
+.s3-logo{font-size:38px;font-weight:900;line-height:38px;color:#173b72}
+.subha-word{font-size:20px;font-weight:800;color:#173b72;line-height:22px}
+.billing-word{font-size:14px;font-weight:800;color:#c62828;letter-spacing:1.4px}
+.company-details{padding:6px 5px;font-size:8.8px;line-height:1.55;overflow-wrap:anywhere}
+.company-name{font-size:15px!important;font-weight:800;color:#173b72;margin-bottom:3px}
+.tax-title{text-align:center;padding:8px 2px}
+.tax-title h1{font-size:18px!important;margin:3px 0 3px!important;font-weight:800}
+.tax-title em{font-size:9px}
+.invoice-meta{display:grid!important;grid-template-columns:1fr 1fr!important}
+.invoice-meta>div{min-height:7.7mm!important;padding:3px 4px!important;border-bottom:1px solid #111!important;border-right:1px solid #111!important;overflow:hidden!important}
+.invoice-meta span{display:block;font-size:7.6px!important;line-height:1.1!important;margin-bottom:1px!important}
+.invoice-meta b{display:block;font-size:8px!important;line-height:1.15!important;overflow-wrap:anywhere}
+.invoice-meta .meta-wide{grid-column:1/3;min-height:7.5mm!important}
+.bill-to-box{min-height:42mm!important;padding:6px 7px!important}
+.bill-to-box .bill-title{font-size:8px;font-weight:700;margin-bottom:3px}
+.bill-to-box b{font-size:10px}
+.bill-to-box>div:not(.bill-title){line-height:1.5}
 .tally-table{width:100%!important;border-collapse:collapse!important;table-layout:fixed!important}
 .tally-table th,.tally-table td{border:1px solid #111!important;padding:3px 3px!important;vertical-align:middle!important}
-.tally-table th{background:#edf1f5!important;text-align:center!important;font-size:7.3px!important;line-height:1.15!important}
-.tally-table td{font-size:8px!important;line-height:1.2!important}
+.tally-table th{background:#edf1f5!important;text-align:center!important;font-size:7px!important;line-height:1.1!important}
+.tally-table td{font-size:7.8px!important;line-height:1.15!important}
 .tally-items col:nth-child(1){width:4%}.tally-items col:nth-child(2){width:24%}.tally-items col:nth-child(3){width:7%}.tally-items col:nth-child(4){width:5%}.tally-items col:nth-child(5){width:5%}.tally-items col:nth-child(6){width:8%}.tally-items col:nth-child(7){width:5%}.tally-items col:nth-child(8){width:10%}.tally-items col:nth-child(9){width:6%}.tally-items col:nth-child(10){width:6%}.tally-items col:nth-child(11){width:6%}.tally-items col:nth-child(12){width:6%}.tally-items col:nth-child(13){width:8%}
-.tally-items tbody{height:72mm}
+.tally-items tbody{height:75mm}
 .c{text-align:center!important}.r{text-align:right!important}
 .amount-total-row{display:grid!important;grid-template-columns:66% 34%!important;border-bottom:1px solid #111!important}
-.amount-words{min-height:28mm!important;padding:7px 8px!important;border-right:1px solid #111!important}
-.amount-words .label,.bottom-three .label{font-weight:700;margin-bottom:6px}
+.amount-words{min-height:25mm!important;padding:7px 8px!important;border-right:1px solid #111!important}
+.amount-words .label,.bottom-three .label{font-weight:700;margin-bottom:5px}
 .summary-total{padding:0!important}
-.summary-total>div{display:flex;justify-content:space-between;padding:3px 7px;border-bottom:1px solid #bbb}
-.grand-total-row{font-size:14px;font-weight:800;border:1px solid #111!important;margin:4px!important;padding:5px 7px!important}
-.eoe{justify-content:flex-end!important;border:0!important;font-size:8px}
-.bottom-three{display:grid!important;grid-template-columns:34% 34% 32%!important;min-height:34mm!important;border-bottom:1px solid #111!important}
-.bottom-three>div{padding:7px 8px;border-right:1px solid #111;line-height:1.55}
+.summary-total>div{display:flex;justify-content:space-between;padding:2.5px 6px;border-bottom:1px solid #bbb}
+.grand-total-row{font-size:13px;font-weight:800;border:1px solid #111!important;margin:3px!important;padding:4px 6px!important}
+.eoe{justify-content:flex-end!important;border:0!important;font-size:7px}
+.bottom-three{display:grid!important;grid-template-columns:34% 34% 32%!important;min-height:32mm!important;border-bottom:1px solid #111}
+.bottom-three>div{padding:6px 7px;border-right:1px solid #111;line-height:1.45}
 .bottom-three>div:last-child{border-right:0}
 .authorised-box{text-align:center!important}
-.seal{width:52px;height:52px;border:2px solid #173b72;border-radius:50%;display:grid;place-items:center;margin:7px auto;color:#173b72;font-size:21px;font-weight:800}
-.sign-line{width:70%;border-top:1px dotted #111;margin:8px auto 4px}
-.declaration-row{display:grid!important;grid-template-columns:66% 34%!important;min-height:24mm;border-bottom:1px solid #111}
-.declaration-row>div{padding:8px;border-right:1px solid #111;line-height:1.5}
-.rupee-circle{display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid #111;border-radius:50%;margin-right:8px;font-weight:700}
-.dotted-sign{border-bottom:1px dotted #111;margin-top:17px}
-.computer-generated{text-align:center;padding:4px;font-size:9px;font-style:italic;font-weight:700}
+.seal{width:48px;height:48px;border:2px solid #173b72;border-radius:50%;display:grid;place-items:center;margin:5px auto;color:#173b72;font-size:20px;font-weight:800}
+.sign-line{width:70%;border-top:1px dotted #111;margin:7px auto 3px}
+.declaration-row{display:grid!important;grid-template-columns:66% 34%!important;min-height:22mm;border-bottom:1px solid #111}
+.declaration-row>div{padding:7px;line-height:1.4}
+.rupee-circle{display:inline-grid;place-items:center;width:23px;height:23px;border:1px solid #111;border-radius:50%;margin-right:7px;font-weight:700}
+.dotted-sign{border-bottom:1px dotted #111;margin-top:15px}
+.computer-generated{text-align:center;padding:4px;font-size:8px;font-style:italic;font-weight:700}
 @media print{
  @page{size:A4 portrait;margin:5mm}
  body *{visibility:hidden!important}
