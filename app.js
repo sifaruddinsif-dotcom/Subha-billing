@@ -2125,7 +2125,7 @@ async function viewInvoice(id){
             </span>
 
             <b>
-              ₹ ${money(i.total)}
+              ${money(i.total)}
             </b>
 
           </div>
