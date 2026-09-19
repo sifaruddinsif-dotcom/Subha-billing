@@ -2269,6 +2269,474 @@ async function viewInvoice(id){
   openModal();
 
 }
-/* START APPLICATION */
-if(token) boot();
-else login();
+/* =========================
+   PAYMENTS
+========================= */
+
+async function payments(){
+
+  const p=await api('/payments');
+
+  $('#content').innerHTML=
+
+    header(
+      'Payments',
+      `
+      <button
+        class="btn primary"
+        onclick="receivePayment()"
+      >
+        ＋ Receive Payment
+      </button>
+      `
+    )
+
+    +
+
+    `
+
+    <div class="panel">
+
+      <div class="tablewrap">
+
+        <table class="table">
+
+          <thead>
+
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Invoice</th>
+              <th>Amount</th>
+              <th>Mode</th>
+              <th>Reference</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${p.map(x=>`
+
+              <tr>
+
+                <td>${x.created_at}</td>
+                <td>${x.customer}</td>
+                <td>${x.invoice_no||'-'}</td>
+                <td>${money(x.amount)}</td>
+                <td>${x.mode}</td>
+                <td>${x.reference||'-'}</td>
+
+              </tr>
+
+            `).join('')}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+    `;
+}
+
+async function receivePayment(){
+
+  const inv=await api('/invoices');
+
+  $('#modalbox').innerHTML=`
+
+    <div class="toolbar">
+
+      <h3>
+        Receive Payment
+      </h3>
+
+      <button
+        class="btn"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        Invoice
+      </label>
+
+      <select id="payinv">
+
+        ${inv
+          .filter(i=>i.total>i.paid)
+          .map(i=>`
+
+            <option value="${i.id}">
+              ${i.invoice_no}
+              —
+              ${i.customer}
+              —
+              Balance
+              ${money(i.total-i.paid)}
+            </option>
+
+          `).join('')}
+
+      </select>
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        Amount
+      </label>
+
+      <input
+        id="payamt"
+        type="number"
+      >
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        Mode
+      </label>
+
+      <select id="paymode">
+
+        <option>Cash</option>
+        <option>UPI</option>
+        <option>Bank</option>
+        <option>Card</option>
+
+      </select>
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        Reference
+      </label>
+
+      <input id="payref">
+
+    </div>
+
+    <button
+      class="btn primary"
+      onclick="savePayment()"
+    >
+      Save Payment
+    </button>
+
+  `;
+
+  openModal();
+}
+
+async function savePayment(){
+
+  try{
+
+    await api(
+      '/invoices/'+$('#payinv').value+'/payment',
+      {
+        method:'POST',
+
+        body:JSON.stringify({
+          amount:Number($('#payamt').value),
+          mode:$('#paymode').value,
+          reference:$('#payref').value
+        })
+      }
+    );
+
+    closeModal();
+
+    payments();
+
+    toast('Payment recorded');
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+}
+
+/* =========================
+   REPORTS
+========================= */
+
+async function reports(){
+
+  const rows=await api('/reports/sales');
+
+  $('#content').innerHTML=
+
+    header(
+      'Sales Reports',
+      `
+      <button
+        class="btn"
+        onclick="downloadCSV()"
+      >
+        Export Invoices CSV
+      </button>
+      `
+    )
+
+    +
+
+    `
+
+    <div class="panel">
+
+      <table class="table">
+
+        <thead>
+
+          <tr>
+
+            <th>Date</th>
+            <th>Invoices</th>
+            <th>Subtotal</th>
+            <th>Discount</th>
+            <th>Tax</th>
+            <th>Total</th>
+            <th>Paid</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${rows.map(x=>`
+
+            <tr>
+
+              <td>${x.date}</td>
+              <td>${x.invoices}</td>
+              <td>${money(x.subtotal)}</td>
+              <td>${money(x.discount)}</td>
+              <td>${money(x.tax)}</td>
+              <td>${money(x.total)}</td>
+              <td>${money(x.paid)}</td>
+
+            </tr>
+
+          `).join('')}
+
+        </tbody>
+
+      </table>
+
+    </div>
+    `;
+}
+
+/* =========================
+   GST REPORT
+========================= */
+
+async function gst(){
+
+  const rows=await api('/reports/gst');
+
+  $('#content').innerHTML=
+
+    header('GST Reports')
+
+    +
+
+    `
+
+    <div class="panel">
+
+      <table class="table">
+
+        <thead>
+
+          <tr>
+
+            <th>Date</th>
+            <th>Taxable</th>
+            <th>CGST</th>
+            <th>SGST</th>
+            <th>IGST</th>
+            <th>Total</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${rows.map(x=>`
+
+            <tr>
+
+              <td>${x.date}</td>
+              <td>${money(x.taxable)}</td>
+              <td>${money(x.cgst)}</td>
+              <td>${money(x.sgst)}</td>
+              <td>${money(x.igst)}</td>
+              <td>${money(x.total)}</td>
+
+            </tr>
+
+          `).join('')}
+
+        </tbody>
+
+      </table>
+
+    </div>
+    `;
+}
+
+/* =========================
+   SETTINGS
+========================= */
+
+function settingsPage(){
+
+  $('#content').innerHTML=
+
+    header('Settings')
+
+    +
+
+    `
+
+    <div class="panel">
+
+      <div class="formgrid">
+
+        ${[
+          ['business_name','Business Name'],
+          ['tagline','Tagline'],
+          ['gstin','GSTIN'],
+          ['address','Business Address'],
+          ['phone','Phone'],
+          ['email','Email'],
+          ['invoice_prefix','Invoice Prefix'],
+          ['state','State']
+        ].map(f=>`
+
+          <div class="field">
+
+            <label>
+              ${f[1]}
+            </label>
+
+            <input
+              id="s_${f[0]}"
+              value="${state.settings[f[0]]||''}"
+            >
+
+          </div>
+
+        `).join('')}
+
+      </div>
+
+      <button
+        class="btn primary"
+        onclick="saveSettings()"
+      >
+        Save Settings
+      </button>
+
+    </div>
+    `;
+}
+
+async function saveSettings(){
+
+  const o={};
+
+  [
+    'business_name',
+    'tagline',
+    'gstin',
+    'address',
+    'phone',
+    'email',
+    'invoice_prefix',
+    'state'
+  ].forEach(k=>{
+    o[k]=$('#s_'+k).value;
+  });
+
+  state.settings=await api(
+    '/settings',
+    {
+      method:'PUT',
+      body:JSON.stringify(o)
+    }
+  );
+
+  toast('Settings saved');
+
+  go('dashboard');
+}
+
+/* =========================
+   MODAL
+========================= */
+
+function openModal(){
+
+  $('#modal').classList.add('open');
+
+}
+
+function closeModal(){
+
+  $('#modal').classList.remove('open');
+
+}
+
+/* =========================
+   CSV
+========================= */
+
+function downloadCSV(){
+
+  window.open(
+    '/api/export/invoices.csv?token='+token,
+    '_blank'
+  );
+
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+function globalSearch(v){
+
+  /*
+    Global search hook.
+    Existing API/pages remain unchanged.
+  */
+
+}
+
+/* =========================
+   START APPLICATION
+========================= */
+
+if(token)
+  boot();
+else
+  login();
