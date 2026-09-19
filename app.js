@@ -2269,3 +2269,6 @@ async function viewInvoice(id){
   openModal();
 
 }
+/* START APPLICATION */
+if(token) boot();
+else login();
