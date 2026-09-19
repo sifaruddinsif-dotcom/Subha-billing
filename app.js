@@ -23,7 +23,152 @@ async function billing(){const inv=await api('/invoices');state.invoices=inv;$('
 async function newInvoice(){const [customers,products]=await Promise.all([api('/customers'),api('/products')]);state.customers=customers;state.products=products;let rows=[];const row=()=>{rows.push({product_id:products[0]?.id||'',qty:1,rate:products[0]?.sale_price||0,discount:0});renderInvoiceModal(customers,products,rows)};row()}
 function renderInvoiceModal(customers,products,rows){$('#modalbox').innerHTML=`<div class="toolbar"><div><h3>New GST Invoice</h3><div class="muted">${state.settings.business_name}</div></div><button class="btn" onclick="closeModal()">×</button></div><div class="formgrid"><div class="field"><label>Customer</label><select id="icust"><option value="">Walk-in Customer</option>${customers.map(c=>`<option value="${c.id}">${c.name} ${c.phone?'— '+c.phone:''}</option>`).join('')}</select></div><div class="field"><label>Tax Type</label><select id="itax"><option value="LOCAL">CGST + SGST</option><option value="IGST">IGST</option></select></div></div><table class="invoice-items"><thead><tr><th>Product</th><th>Qty</th><th>Rate</th><th>Discount</th><th></th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td><select onchange="rows[${i}].product_id=this.value;rows[${i}].rate=Number(this.selectedOptions[0].dataset.rate||0);renderInvoiceModal(state.customers,state.products,rows)">${products.map(p=>`<option data-rate="${p.sale_price}" value="${p.id}" ${p.id==r.product_id?'selected':''}>${p.name} — ${p.sale_price}</option>`).join('')}</select></td><td><input type="number" min="0.01" step="0.01" value="${r.qty}" onchange="rows[${i}].qty=Number(this.value)"></td><td><input type="number" step="0.01" value="${r.rate}" onchange="rows[${i}].rate=Number(this.value)"></td><td><input type="number" step="0.01" value="${r.discount}" onchange="rows[${i}].discount=Number(this.value)"></td><td><button class="btn danger" onclick="rows.splice(${i},1);renderInvoiceModal(state.customers,state.products,rows)">×</button></td></tr>`).join('')}</tbody></table><div style="margin-top:10px"><button class="btn" onclick="rows.push({product_id:products[0]?.id||'',qty:1,rate:products[0]?.sale_price||0,discount:0});renderInvoiceModal(state.customers,state.products,rows)">＋ Add Item</button></div><div class="formgrid" style="margin-top:10px"><div class="field"><label>Additional Discount</label><input id="idisc" type="number" value="0"></div><div class="field"><label>Paid Amount</label><input id="ipaid" type="number" value="0"></div><div class="field"><label>Payment Mode</label><select id="imode"><option>Cash</option><option>UPI</option><option>Bank</option><option>Card</option><option>Credit</option></select></div><div class="field"><label>Notes</label><input id="inote"></div></div><button class="btn primary" onclick='saveInvoice(${JSON.stringify(rows)})'>Create Invoice</button>`;openModal()}
 async function saveInvoice(rows){try{const d=await api('/invoices',{method:'POST',body:JSON.stringify({customer_id:$('#icust').value||null,tax_type:$('#itax').value,discount:Number($('#idisc').value)||0,paid:Number($('#ipaid').value)||0,payment_mode:$('#imode').value,notes:$('#inote').value,items:rows})});closeModal();toast('Invoice '+d.invoice_no+' created');await billing();viewInvoice(d.id)}catch(e){alert(e.message)}}
-async function viewInvoice(id){const i=await api('/invoices/'+id);$('#modalbox').innerHTML=`<div class="toolbar no-print"><h3>Invoice ${i.invoice_no}</h3><div class="actions"><button class="btn primary" onclick="window.print()">Print / Save PDF</button><button class="btn" onclick="closeModal()">Close</button></div></div><div class="invoice-print" style="background:#fff;color:#111;padding:25px;border-radius:10px"><div style="display:flex;justify-content:space-between"><div><h1 style="margin:0">${state.settings.business_name}</h1><div>${state.settings.address||''}</div><div>GSTIN: ${state.settings.gstin||'—'}</div><div>${state.settings.phone||''} ${state.settings.email||''}</div></div><div style="text-align:right"><h2>TAX INVOICE</h2><b>${i.invoice_no}</b><br>${i.created_at}</div></div><hr><p><b>Bill To:</b> ${i.customer}<br>${i.phone||''}<br>${i.address||''}<br>GSTIN: ${i.gstin||'—'}</p><table class="invoice-items"><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>GST</th><th>Total</th></tr></thead><tbody>${i.items.map(x=>`<tr><td>${x.name}</td><td>${x.qty}</td><td>${money(x.rate)}</td><td>${x.gst}%</td><td>${money(x.total)}</td></tr>`).join('')}</tbody></table><div class="totals"><div class="totalrow"><span>Subtotal</span><b>${money(i.subtotal)}</b></div><div class="totalrow"><span>Discount</span><b>${money(i.discount)}</b></div><div class="totalrow"><span>Taxable</span><b>${money(i.taxable)}</b></div><div class="totalrow"><span>CGST</span><b>${money(i.cgst)}</b></div><div class="totalrow"><span>SGST</span><b>${money(i.sgst)}</b></div><div class="totalrow"><span>IGST</span><b>${money(i.igst)}</b></div><div class="totalrow"><span>Round Off</span><b>${money(i.roundoff)}</b></div><div class="totalrow big"><span>Grand Total</span><b>${money(i.total)}</b></div><div class="totalrow"><span>Paid</span><b>${money(i.paid)}</b></div><div class="totalrow"><span>Balance</span><b>${money(i.total-i.paid)}</b></div></div><p style="margin-top:45px">Thank you for your business.</p></div>`;openModal()}
+ async function viewInvoice(id){
+  const i=await api('/invoices/'+id);
+
+  const items=(i.items||[]).map((x,n)=>`
+    <tr>
+      <td>${n+1}</td>
+      <td><b>${x.name||'-'}</b></td>
+      <td>${x.hsn||'-'}</td>
+      <td>${x.qty||0}</td>
+      <td>${x.unit||'PCS'}</td>
+      <td>${money(x.rate)}</td>
+      <td>${money(x.discount)}</td>
+      <td>${money(x.taxable)}</td>
+      <td>${money(x.cgst)}</td>
+      <td>${money(x.sgst)}</td>
+      <td>${money(x.igst)}</td>
+      <td><b>${money(x.total)}</b></td>
+    </tr>
+  `).join('');
+
+  $('#modalbox').innerHTML=`
+    <div class="toolbar no-print">
+      <h3>Invoice ${i.invoice_no}</h3>
+      <button class="btn primary" onclick="window.print()">🖨 Print / Save PDF</button>
+      <button class="btn" onclick="closeModal()">Close</button>
+    </div>
+
+    <div class="invoice-print tally-invoice">
+
+      <div class="tally-header">
+        <div>
+          <h1>${state.settings.business_name||'SUBHA BILLING'}</h1>
+          <div>${state.settings.address||''}</div>
+          <div>Phone: ${state.settings.phone||'-'} | Email: ${state.settings.email||'-'}</div>
+          <div><b>GSTIN: ${state.settings.gstin||'-'}</b></div>
+          <div>State: ${state.settings.state||'-'}</div>
+        </div>
+
+        <div class="invoice-heading">
+          <h2>TAX INVOICE</h2>
+          <b>ORIGINAL FOR RECIPIENT</b>
+        </div>
+      </div>
+
+      <div class="invoice-info">
+        <div><b>Invoice No.</b><br>${i.invoice_no||'-'}</div>
+        <div><b>Invoice Date</b><br>${i.created_at||'-'}</div>
+        <div><b>Payment Mode</b><br>${i.payment_mode||'-'}</div>
+        <div><b>Tax Type</b><br>${i.tax_type==='IGST'?'IGST':'CGST + SGST'}</div>
+      </div>
+
+      <div class="bill-section">
+        <div>
+          <h4>BILL TO</h4>
+          <b>${i.customer||'Walk-in Customer'}</b><br>
+          ${i.address||''}<br>
+          Phone: ${i.phone||'-'}<br>
+          GSTIN: ${i.gstin||'-'}
+        </div>
+
+        <div>
+          <h4>PLACE OF SUPPLY</h4>
+          State: ${i.state||state.settings.state||'-'}<br>
+          GSTIN: ${i.gstin||'-'}<br>
+          Invoice Ref: ${i.invoice_no||'-'}
+        </div>
+      </div>
+
+      <table class="tally-table">
+        <thead>
+          <tr>
+            <th>Sl.</th>
+            <th>Description of Goods / Services</th>
+            <th>HSN/SAC</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Rate</th>
+            <th>Disc.</th>
+            <th>Taxable Value</th>
+            <th>CGST</th>
+            <th>SGST</th>
+            <th>IGST</th>
+            <th>Total Amount</th>
+          </tr>
+        </thead>
+        <tbody>${items}</tbody>
+      </table>
+
+      <div class="invoice-footer-grid">
+        <div>
+          <h4>AMOUNT IN WORDS</h4>
+          <b>Rupees ${Number(i.total||0).toLocaleString('en-IN')} Only</b>
+
+          <h4>BANK DETAILS</h4>
+          Bank Name: __________________________<br>
+          A/c No.: _____________________________<br>
+          IFSC: ________________________________<br>
+          UPI: __________________________________
+
+          <h4>TERMS & CONDITIONS</h4>
+          1. Goods once sold will not be returned unless agreed otherwise.<br>
+          2. Payment is due as per agreed credit terms.<br>
+          3. Subject to applicable GST rules and jurisdiction.
+        </div>
+
+        <div class="invoice-totals">
+          <div><span>Subtotal</span><b>${money(i.subtotal)}</b></div>
+          <div><span>Discount</span><b>${money(i.discount)}</b></div>
+          <div><span>Taxable Value</span><b>${money(i.taxable)}</b></div>
+          <div><span>CGST</span><b>${money(i.cgst)}</b></div>
+          <div><span>SGST</span><b>${money(i.sgst)}</b></div>
+          <div><span>IGST</span><b>${money(i.igst)}</b></div>
+          <div><span>Round Off</span><b>${money(i.roundoff)}</b></div>
+
+          <div class="grand-total">
+            <span>GRAND TOTAL</span>
+            <b>${money(i.total)}</b>
+          </div>
+
+          <div><span>Paid</span><b>${money(i.paid)}</b></div>
+          <div><span>Balance Due</span><b>${money(i.total-i.paid)}</b></div>
+        </div>
+      </div>
+
+      <div class="signature-section">
+        <div>
+          Customer Signature
+          <div class="signature-line"></div>
+        </div>
+
+        <div>
+          For <b>${state.settings.business_name||'SUBHA BILLING'}</b>
+          <div class="signature-line"></div>
+          <b>Authorised Signatory</b>
+        </div>
+      </div>
+
+      <div class="computer-generated">
+        This is a Computer Generated Invoice
+      </div>
+
+    </div>
+  `;
+
+  openModal();
+}
 async function payments(){const p=await api('/payments');$('#content').innerHTML=header('Payments',`<button class="btn primary" onclick="receivePayment()">＋ Receive Payment</button>`)+`<div class="panel"><div class="tablewrap"><table class="table"><thead><tr><th>Date</th><th>Customer</th><th>Invoice</th><th>Amount</th><th>Mode</th><th>Reference</th></tr></thead><tbody>${p.map(x=>`<tr><td>${x.created_at}</td><td>${x.customer}</td><td>${x.invoice_no||'-'}</td><td>${money(x.amount)}</td><td>${x.mode}</td><td>${x.reference||'-'}</td></tr>`).join('')}</tbody></table></div></div>`}
 async function receivePayment(){const inv=await api('/invoices');$('#modalbox').innerHTML=`<div class="toolbar"><h3>Receive Payment</h3><button class="btn" onclick="closeModal()">×</button></div><div class="field"><label>Invoice</label><select id="payinv">${inv.filter(i=>i.total>i.paid).map(i=>`<option value="${i.id}">${i.invoice_no} — ${i.customer} — Balance ${money(i.total-i.paid)}</option>`).join('')}</select></div><div class="field"><label>Amount</label><input id="payamt" type="number"></div><div class="field"><label>Mode</label><select id="paymode"><option>Cash</option><option>UPI</option><option>Bank</option><option>Card</option></select></div><div class="field"><label>Reference</label><input id="payref"></div><button class="btn primary" onclick="savePayment()">Save Payment</button>`;openModal()}
 async function savePayment(){try{await api('/invoices/'+$('#payinv').value+'/payment',{method:'POST',body:JSON.stringify({amount:Number($('#payamt').value),mode:$('#paymode').value,reference:$('#payref').value})});closeModal();payments();toast('Payment recorded')}catch(e){alert(e.message)}}
