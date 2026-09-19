@@ -1542,6 +1542,12 @@ function amountInWordsINR(value){
   return p.join(' ')+' Rupees Only';
 }
 
+function invoiceDate(value){
+  const s=String(value||'').trim();
+  const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? m[3]+'-'+m[2]+'-'+m[1] : (s||'—');
+}
+
 async function viewInvoice(id){
   try{
     const i=await api('/invoices/'+id);
@@ -1561,7 +1567,7 @@ async function viewInvoice(id){
     }).join('');
     $('#modalbox').innerHTML='<div class="toolbar no-print"><h3>Invoice '+(i.invoice_no||'')+'</h3><div class="actions"><button class="btn primary" onclick="window.print()">🖨 Print / Save PDF</button><button class="btn" onclick="closeModal()">Close</button></div></div>'+'<div class="invoice-print tally-invoice">'+
       '<div class="tally-top"><div class="tally-left"><div class="company-tax-row"><div class="brand-box"><div class="s3-logo">S3</div><div class="subha-word">SUBHA</div><div class="billing-word">BILLING</div></div><div class="company-details"><div class="company-name">'+(b.business_name||'SUBHA BILLING')+'</div><div>'+(b.address||'')+'</div><div>Phone&nbsp; : '+(b.phone||'-')+'</div><div>E-mail&nbsp; : '+(b.email||'-')+'</div><div>Website : '+(b.website||'-')+'</div><div>GSTIN&nbsp; : '+(b.gstin||'-')+'</div></div><div class="tax-title"><h1>TAX INVOICE</h1><em>(ORIGINAL FOR RECIPIENT)</em></div></div><div class="bill-to-box"><div class="bill-title">Bill To</div><b>M/s. '+customer+'</b><div>'+addr+'</div><div>GSTIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: '+gstin+'</div><div>State&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: '+supply+'</div><div>Phone&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: '+phone+'</div><div>Place of Supply : '+supply+'</div></div></div>'+
-      '<div class="invoice-meta"><div><span>Invoice No.</span><b>'+(i.invoice_no||'-')+'</b></div><div><span>Dated</span><b>'+(i.created_at||'-')+'</b></div><div><span>Delivery Note</span><b>'+(i.delivery_note||'—')+'</b></div><div><span>Mode/Terms of Payment</span><b>'+(i.payment_mode||'—')+'</b></div><div><span>Reference No. &amp; Date.</span><b>'+(i.reference_no||'—')+'</b></div><div><span>Other References</span><b>'+(i.other_references||'—')+'</b></div><div><span>Buyer’s Order No.</span><b>'+(i.buyer_order_no||'—')+'</b></div><div><span>Dated</span><b>'+(i.buyer_order_date||'—')+'</b></div><div><span>Dispatch Doc No.</span><b>'+(i.dispatch_doc_no||'—')+'</b></div><div><span>Delivery Note Date</span><b>'+(i.delivery_note_date||'—')+'</b></div><div><span>Dispatched through</span><b>'+(i.dispatched_through||'—')+'</b></div><div><span>Destination</span><b>'+(i.destination||'—')+'</b></div><div class="meta-wide"><span>Terms of Delivery</span><b>'+(i.terms_of_delivery||'—')+'</b></div></div></div>'+
+      '<div class="invoice-meta"><div><span>Invoice No.</span><b>'+(i.invoice_no||'-')+'</b></div><div><span>Dated</span><b>'+invoiceDate(i.created_at)+'</b></div><div><span>Delivery Note</span><b>'+(i.delivery_note||'—')+'</b></div><div><span>Mode/Terms of Payment</span><b>'+(i.payment_mode||'—')+'</b></div><div><span>Reference No. &amp; Date.</span><b>'+(i.reference_no||'—')+'</b></div><div><span>Other References</span><b>'+(i.other_references||'—')+'</b></div><div><span>Buyer’s Order No.</span><b>'+(i.buyer_order_no||'—')+'</b></div><div><span>Dated</span><b>'+(i.buyer_order_date||'—')+'</b></div><div><span>Dispatch Doc No.</span><b>'+(i.dispatch_doc_no||'—')+'</b></div><div><span>Delivery Note Date</span><b>'+(i.delivery_note_date||'—')+'</b></div><div><span>Dispatched through</span><b>'+(i.dispatched_through||'—')+'</b></div><div><span>Destination</span><b>'+(i.destination||'—')+'</b></div><div class="meta-wide"><span>Terms of Delivery</span><b>'+(i.terms_of_delivery||'—')+'</b></div></div></div>'+
       '<table class="tally-table tally-items"><colgroup><col><col><col><col><col><col><col><col><col><col><col><col><col></colgroup><thead><tr><th rowspan="2">Sl<br>No.</th><th rowspan="2">Description of Goods / Services</th><th rowspan="2">HSN/SAC</th><th rowspan="2">Qty.</th><th rowspan="2">Unit</th><th rowspan="2">Rate</th><th rowspan="2">Disc. %</th><th rowspan="2">Taxable<br>Value</th><th colspan="4">Tax Amount</th><th rowspan="2">Total Amount<br>(₹)</th></tr><tr><th>CGST<br>Rate</th><th>Amount</th><th>SGST<br>Rate</th><th>Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'+
       '<div class="amount-total-row"><div class="amount-words"><div class="label">Amount Chargeable (in words)</div><b>INR '+amountInWordsINR(i.total).replace(' Rupees Only','')+' Only</b></div><div class="summary-total"><div><span>Total Taxable Value</span><b>'+money(i.taxable)+'</b></div><div><span>Total CGST</span><b>'+money(i.cgst)+'</b></div><div><span>Total SGST</span><b>'+money(i.sgst)+'</b></div><div><span>Total IGST</span><b>'+money(i.igst)+'</b></div><div><span>Round Off</span><b>'+money(i.roundoff)+'</b></div><div class="grand-total-row"><span>Grand Total</span><b>₹ '+money(i.total)+'</b></div><div class="eoe">(E &amp; O.E)</div></div></div>'+
       '<div class="bottom-three"><div><div class="label">Company\'s Bank Details</div><div>Bank Name&nbsp;&nbsp;&nbsp;: '+(b.bank_name||'—')+'</div><div>A/c No.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: '+(b.bank_account||'—')+'</div><div>IFSC Code&nbsp;&nbsp;&nbsp;&nbsp;: '+(b.ifsc||'—')+'</div><div>Branch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: '+(b.branch||'—')+'</div></div><div><div class="label">Terms &amp; Conditions</div><div>1. Goods once sold will not be taken back.</div><div>2. Interest @ 18% p.a. will be charged on overdue payments.</div><div>3. All disputes are subject to '+supply+' Jurisdiction.</div><div>4. Payment is to be made within 15 days.</div></div><div class="authorised-box"><div>For <b>'+(b.business_name||'SUBHA BILLING')+'</b></div><div class="seal">S3</div><div class="sign-line"></div><b>Authorised Signatory</b></div></div>'+
@@ -1928,8 +1934,13 @@ function settingsPage(){
           ['address','Business Address'],
           ['phone','Phone'],
           ['email','Email'],
+          ['website','Website'],
           ['invoice_prefix','Invoice Prefix'],
-          ['state','State']
+          ['state','State'],
+          ['bank_name','Bank Name'],
+          ['bank_account','A/c Number'],
+          ['ifsc','IFSC Code'],
+          ['branch','Bank Branch']
         ].map(f=>`
 
           <div class="field">
@@ -1971,8 +1982,13 @@ async function saveSettings(){
     'address',
     'phone',
     'email',
+    'website',
     'invoice_prefix',
-    'state'
+    'state',
+    'bank_name',
+    'bank_account',
+    'ifsc',
+    'branch'
   ].forEach(k=>{
     o[k]=$('#s_'+k).value;
   });
