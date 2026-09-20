@@ -1349,3 +1349,34 @@ button{
     min-height:30mm!important;
   }
 }
+
+
+/* FINAL FIX: Bill To direct child selector was making every address line 30-39mm tall */
+.invoice-print.tally-invoice .bill-to-box{
+  min-height:42mm!important;
+  padding:6px 7px!important;
+}
+.invoice-print.tally-invoice .bill-to-box>div{
+  width:auto!important;
+  min-height:0!important;
+  padding:0!important;
+  border-right:0!important;
+  border-bottom:0!important;
+}
+.invoice-print.tally-invoice .bill-to-box .bill-title{
+  width:auto!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0 0 3px!important;
+  border:0!important;
+  font-size:8px!important;
+  font-weight:700!important;
+}
+.invoice-print.tally-invoice .bill-to-box b{
+  display:block!important;
+  margin:0 0 4px!important;
+}
+.invoice-print.tally-invoice .bill-to-box>div:not(.bill-title){
+  line-height:1.35!important;
+  margin:0!important;
+}
