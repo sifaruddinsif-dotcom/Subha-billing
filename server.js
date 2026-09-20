@@ -56,3 +56,5 @@ app.get('/api/reports/gst',auth,(req,res)=>res.json(db.prepare("SELECT substr(cr
 app.get('/api/export/invoices.csv',auth,(req,res)=>{const rows=db.prepare('SELECT invoice_no,created_at,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode FROM invoices ORDER BY id DESC').all();const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';const csv=[Object.keys(rows[0]||{invoice_no:1}).join(','),...rows.map(r=>Object.values(r).map(esc).join(','))].join('\n');res.setHeader('Content-Type','text/csv');res.setHeader('Content-Disposition','attachment; filename="subha-billing-invoices.csv"');res.send(csv)});
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 app.listen(PORT,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
+
+require('./server-enhancements')(app,db,auth,settings,nextNo,bcrypt);
