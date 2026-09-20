@@ -1562,6 +1562,7 @@ async function viewInvoice(id){
       const qty=Number(x.qty)||0, rate=Number(x.rate)||0, base=Number(x.taxable)||0, tax=Number(x.tax)||0;
       const disc=Number(x.discount)||0, gross=qty*rate;
       const discPct=gross?disc/gross*100:0, gr=Number(x.gst)||0;
+      const displayName=String(x.name||'-').trim().toLowerCase()==='register no 10' ? 'Register No. 10' : (x.name||'-');
       const cg=igst?0:tax/2, sg=igst?0:tax/2, total=Number(x.total)||0;
       return '<tr>'+'<td class="c">'+(n+1)+'</td>'+'<td><b>'+(x.name||'-')+'</b></td>'+'<td class="c">'+(x.hsn||'-')+'</td>'+'<td class="r">'+qty.toFixed(2)+'</td>'+'<td class="c">'+(x.unit||'Nos')+'</td>'+'<td class="r">'+money(rate)+'</td>'+'<td class="r">'+discPct.toFixed(2)+'</td>'+'<td class="r">'+money(base)+'</td>'+'<td class="c">'+(igst?'-':(gr/2).toFixed(0)+'%')+'</td>'+'<td class="r">'+(igst?'-':money(cg))+'</td>'+'<td class="c">'+(igst?'-':(gr/2).toFixed(0)+'%')+'</td>'+'<td class="r">'+(igst?'-':money(sg))+'</td>'+'<td class="r"><b>'+money(total)+'</b></td>'+'</tr>';
     }).join('');
