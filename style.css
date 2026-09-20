@@ -1394,3 +1394,19 @@ button{
   vertical-align:top!important;
   padding-top:5px!important;
 }
+
+
+/* TALLY-STYLE TAX ANALYSIS */
+.invoice-print.tally-invoice .tax-analysis{border-bottom:1px solid #111!important;background:#fff!important}
+.invoice-print.tally-invoice .tax-analysis-title{text-align:center;font-weight:800;font-size:11px;padding:3px 0;border-bottom:1px solid #111!important}
+.invoice-print.tally-invoice .tax-analysis-table{width:100%!important;border-collapse:collapse!important;table-layout:fixed!important}
+.invoice-print.tally-invoice .tax-analysis-table th,
+.invoice-print.tally-invoice .tax-analysis-table td{border:1px solid #111!important;padding:3px 4px!important;font-size:8px!important;line-height:1.15!important;vertical-align:middle!important}
+.invoice-print.tally-invoice .tax-analysis-table th{text-align:center!important;background:#edf1f5!important;font-weight:700!important}
+.invoice-print.tally-invoice .tax-analysis-table td:first-child{width:27%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(2){width:14%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(3){width:10%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(4){width:14%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(5){width:10%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(6){width:14%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(7){width:15%!important}
