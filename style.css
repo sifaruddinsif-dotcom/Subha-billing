@@ -1316,3 +1316,36 @@ button{
  .no-print{display:none!important}
  .tally-invoice{width:190mm!important;margin:0!important;border:1px solid #111!important}
 }
+
+/* FINAL FIX: balanced A4 Tally proportions */
+.invoice-print.tally-invoice .tally-top{
+  grid-template-columns:66% 34%!important;
+  align-items:stretch!important;
+}
+.invoice-print.tally-invoice .company-tax-row{
+  min-height:30mm!important;
+}
+.invoice-print.tally-invoice .bill-to-box{
+  min-height:30mm!important;
+}
+.invoice-print.tally-invoice .invoice-meta{
+  height:100%!important;
+}
+.invoice-print.tally-invoice .invoice-meta>div{
+  min-height:7mm!important;
+  padding:2.5px 4px!important;
+}
+.invoice-print.tally-invoice .invoice-meta .meta-wide{
+  min-height:7mm!important;
+}
+.invoice-print.tally-invoice .bill-to-box>div{
+  min-height:30mm!important;
+}
+@media print{
+  .invoice-print.tally-invoice .company-tax-row{
+    min-height:30mm!important;
+  }
+  .invoice-print.tally-invoice .bill-to-box{
+    min-height:30mm!important;
+  }
+}
