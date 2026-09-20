@@ -22,3 +22,18 @@ function settingsEnhanced(){$('#content').innerHTML=header('Settings')+`<div cla
 async function changePassword(){if($('#newpw').value!==$('#newpw2').value)return alert('Passwords do not match');try{await api('/change-password',{method:'POST',body:JSON.stringify({current_password:$('#oldpw').value,new_password:$('#newpw').value})});toast('Password changed')}catch(e){alert(e.message)}}
 async function restoreBackup(){const f=$('#bf').files[0];if(!f)return alert('Select backup JSON');if(!confirm('Restore will replace current data. Continue?'))return;try{await api('/restore',{method:'POST',body:await f.text()});alert('Backup restored. Reloading...');location.reload()}catch(e){alert(e.message)}}
 window.gst=async function(){const a=await api('/reports/gst');$('#content').innerHTML=header('GST Reports',`<button class="btn" onclick="window.open('/api/export/gst.csv?token='+token,'_blank')">Export GST CSV</button>`)+`<div class="panel"><table class="table"><thead><tr><th>Date</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total</th></tr></thead><tbody>${a.map(x=>`<tr><td>${x.date}</td><td>${money(x.taxable)}</td><td>${money(x.cgst)}</td><td>${money(x.sgst)}</td><td>${money(x.igst)}</td><td>${money(x.total)}</td></tr>`).join('')}</tbody></table></div>`}
+
+/* GST RATE DROPDOWN FOR ADD/EDIT PRODUCT */
+window.openProduct=function(id){
+  const p=id?state.products.find(x=>x.id==id):{};
+  const gstRates=[0,5,12,18,28,40];
+  $('#modalbox').innerHTML=
+    '<div class="toolbar"><h3>'+(id?'Edit':'Add')+' Product</h3><button class="btn" onclick="closeModal()">×</button></div>'+
+    '<div class="formgrid">'+
+    [['name','Product Name'],['sku','SKU'],['barcode','Barcode'],['category','Category'],['unit','Unit'],['hsn','HSN/SAC'],['purchase_price','Purchase Price'],['sale_price','Sale Price']].map(f=>'<div class="field"><label>'+f[1]+'</label><input id="p_'+f[0]+'" value="'+(p[f[0]]??'')+'"></div>').join('')+
+    '<div class="field"><label>GST %</label><select id="p_gst">'+gstRates.map(r=>'<option value="'+r+'" '+(Number(p.gst||0)===r?'selected':'')+'>'+r+'%</option>').join('')+'</select></div>'+
+    '<div class="field"><label>Opening Stock</label><input id="p_stock" value="'+(p.stock??'')+'"></div>'+
+    '<div class="field"><label>Minimum Stock</label><input id="p_min_stock" value="'+(p.min_stock??'')+'"></div>'+
+    '</div><button class="btn primary" onclick="saveProduct('+(id||0)+')">Save Product</button>';
+  openModal();
+};
