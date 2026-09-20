@@ -1387,3 +1387,10 @@ button{
   vertical-align:top!important;
   padding-top:5px!important;
 }
+
+
+/* FINAL: keep every invoice item value aligned at the top of its row */
+.invoice-print.tally-invoice .tally-items tbody td{
+  vertical-align:top!important;
+  padding-top:5px!important;
+}
