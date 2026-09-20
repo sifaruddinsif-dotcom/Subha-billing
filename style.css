@@ -1380,3 +1380,10 @@ button{
   line-height:1.35!important;
   margin:0!important;
 }
+
+
+/* TARGETED FIX: keep item description at the top of the invoice row */
+.invoice-print.tally-invoice .tally-items tbody td:nth-child(2){
+  vertical-align:top!important;
+  padding-top:5px!important;
+}
