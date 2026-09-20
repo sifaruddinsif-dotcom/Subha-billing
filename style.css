@@ -1291,7 +1291,7 @@ button{
 .tally-items tbody{height:75mm}
 .c{text-align:center!important}.r{text-align:right!important}
 .amount-total-row{display:grid!important;grid-template-columns:66% 34%!important;border-bottom:1px solid #111!important}
-.amount-words{min-height:25mm!important;padding:7px 8px!important;border-right:1px solid #111!important}
+.amount-words{min-height:12mm!important;padding:7px 8px!important;border-right:1px solid #111!important}
 .amount-words .label,.bottom-three .label{font-weight:700;margin-bottom:5px}
 .summary-total{padding:0!important}
 .summary-total>div{display:flex;justify-content:space-between;padding:2.5px 6px;border-bottom:1px solid #bbb}
