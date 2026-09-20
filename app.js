@@ -1558,6 +1558,29 @@ async function viewInvoice(id){
     const phone=i.phone||'-';
     const gstin=i.gstin||'-';
     const supply=i.state||b.state||'-';
+    const taxGroups={};
+    (i.items||[]).forEach(x=>{
+      const hsn=String(x.hsn||'-');
+      const base=Number(x.taxable)||0;
+      const tax=Number(x.tax)||0;
+      const gr=Number(x.gst)||0;
+      if(!taxGroups[hsn]) taxGroups[hsn]={hsn,taxable:0,cgst:0,sgst:0,igst:0,gst:gr};
+      taxGroups[hsn].taxable+=base;
+      if(igst) taxGroups[hsn].igst+=tax;
+      else {
+        taxGroups[hsn].cgst+=tax/2;
+        taxGroups[hsn].sgst+=tax/2;
+      }
+      if(!taxGroups[hsn].gst && gr) taxGroups[hsn].gst=gr;
+    });
+    const taxAnalysisRows=Object.values(taxGroups).map(g=>{
+      const rate=igst?0:Number(g.gst||0)/2;
+      const totalTax=igst?g.igst:g.cgst+g.sgst;
+      return '<tr><td>'+g.hsn+'</td><td class="r">'+money(g.taxable)+'</td><td class="c">'+(igst?'-':rate.toFixed(0)+'%')+'</td><td class="r">'+(igst?'-':money(g.cgst))+'</td><td class="c">'+(igst?'-':rate.toFixed(0)+'%')+'</td><td class="r">'+(igst?'-':money(g.sgst))+'</td><td class="r">'+money(totalTax)+'</td></tr>';
+    }).join('');
+    const taxAnalysisTotalTax=Number(i.cgst||0)+Number(i.sgst||0)+Number(i.igst||0);
+    const taxAnalysis='<div class="tax-analysis"><div class="tax-analysis-title">Tax Analysis</div><table class="tax-analysis-table"><thead><tr><th rowspan="2">HSN/SAC</th><th rowspan="2">Taxable<br>Value</th><th colspan="2">CGST</th><th colspan="2">SGST/UTGST</th><th rowspan="2">Total<br>Tax Amount</th></tr><tr><th>Rate</th><th>Amount</th><th>Rate</th><th>Amount</th></tr></thead><tbody>'+taxAnalysisRows+'</tbody><tfoot><tr><th>Total</th><th class="r">'+money(i.taxable)+'</th><th></th><th class="r">'+money(i.cgst)+'</th><th></th><th class="r">'+money(i.sgst)+'</th><th class="r">'+money(taxAnalysisTotalTax)+'</th></tr></tfoot></table></div>';
+
     const rows=(i.items||[]).map((x,n)=>{
       const qty=Number(x.qty)||0, rate=Number(x.rate)||0, base=Number(x.taxable)||0, tax=Number(x.tax)||0;
       const disc=Number(x.discount)||0, gross=qty*rate;
@@ -1571,7 +1594,7 @@ async function viewInvoice(id){
       '<div class="invoice-meta"><div><span>Invoice No.</span><b>'+(i.invoice_no||'-')+'</b></div><div><span>Dated</span><b>'+invoiceDate(i.created_at)+'</b></div><div><span>Delivery Note</span><b>'+(i.delivery_note||'—')+'</b></div><div><span>Mode/Terms of Payment</span><b>'+(i.payment_mode||'—')+'</b></div><div><span>Reference No. &amp; Date.</span><b>'+(i.reference_no||'—')+'</b></div><div><span>Other References</span><b>'+(i.other_references||'—')+'</b></div><div><span>Buyer’s Order No.</span><b>'+(i.buyer_order_no||'—')+'</b></div><div><span>Dated</span><b>'+(i.buyer_order_date||'—')+'</b></div><div><span>Dispatch Doc No.</span><b>'+(i.dispatch_doc_no||'—')+'</b></div><div><span>Delivery Note Date</span><b>'+(i.delivery_note_date||'—')+'</b></div><div><span>Dispatched through</span><b>'+(i.dispatched_through||'—')+'</b></div><div><span>Destination</span><b>'+(i.destination||'—')+'</b></div><div class="meta-wide"><span>Terms of Delivery</span><b>'+(i.terms_of_delivery||'—')+'</b></div></div></div>'+
       '<table class="tally-table tally-items"><colgroup><col><col><col><col><col><col><col><col><col><col><col><col><col></colgroup><thead><tr><th rowspan="2">Sl<br>No.</th><th rowspan="2">Description of Goods / Services</th><th rowspan="2">HSN/SAC</th><th rowspan="2">Qty.</th><th rowspan="2">Unit</th><th rowspan="2">Rate</th><th rowspan="2">Disc. %</th><th rowspan="2">Taxable<br>Value</th><th colspan="4">Tax Amount</th><th rowspan="2">Total Amount<br>(₹)</th></tr><tr><th>CGST<br>Rate</th><th>Amount</th><th>SGST<br>Rate</th><th>Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'+
       '<div class="amount-total-row"><div class="amount-words"><div class="label">Amount Chargeable (in words)</div><b>INR '+amountInWordsINR(i.total)+'</b></div><div class="summary-total"><div><span>Total Taxable Value</span><b>'+money(i.taxable)+'</b></div><div><span>Total CGST</span><b>'+money(i.cgst)+'</b></div><div><span>Total SGST</span><b>'+money(i.sgst)+'</b></div><div><span>Total IGST</span><b>'+money(i.igst)+'</b></div><div><span>Round Off</span><b>'+money(i.roundoff)+'</b></div><div class="grand-total-row"><span>Grand Total</span><b>'+money(i.total)+'</b></div><div class="eoe">(E &amp; O.E)</div></div></div>'+
-      '<div class="bottom-three"><div><div class="label">Company\'s Bank Details</div><div>Bank Name&nbsp;&nbsp;&nbsp;: '+(b.bank_name||'—')+'</div><div>A/c No.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: '+(b.bank_account||'—')+'</div><div>IFSC Code&nbsp;&nbsp;&nbsp;&nbsp;: '+(b.ifsc||'—')+'</div><div>Branch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: '+(b.branch||'—')+'</div></div><div><div class="label">Terms &amp; Conditions</div><div>1. Goods once sold will not be taken back.</div><div>2. Interest @ 18% p.a. will be charged on overdue payments.</div><div>3. All disputes are subject to '+supply+' Jurisdiction.</div><div>4. Payment is to be made within 15 days.</div></div><div class="authorised-box"><div>For <b>'+(b.business_name||'SUBHA BILLING')+'</b></div><div class="seal">S3</div><div class="sign-line"></div><b>Authorised Signatory</b></div></div>'+
+      taxAnalysis+      '<div class="bottom-three"><div><div class="label">Company\'s Bank Details</div><div>Bank Name&nbsp;&nbsp;&nbsp;: '+(b.bank_name||'—')+'</div><div>A/c No.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: '+(b.bank_account||'—')+'</div><div>IFSC Code&nbsp;&nbsp;&nbsp;&nbsp;: '+(b.ifsc||'—')+'</div><div>Branch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: '+(b.branch||'—')+'</div></div><div><div class="label">Terms &amp; Conditions</div><div>1. Goods once sold will not be taken back.</div><div>2. Interest @ 18% p.a. will be charged on overdue payments.</div><div>3. All disputes are subject to '+supply+' Jurisdiction.</div><div>4. Payment is to be made within 15 days.</div></div><div class="authorised-box"><div>For <b>'+(b.business_name||'SUBHA BILLING')+'</b></div><div class="seal">S3</div><div class="sign-line"></div><b>Authorised Signatory</b></div></div>'+
       '<div class="declaration-row"><div><span class="rupee-circle">₹</span>We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</div><div><b>Receiver\'s Signature</b><div class="dotted-sign"></div></div></div><div class="computer-generated">This is a Computer Generated Invoice</div></div>';
     openModal();
   }catch(e){alert(e.message||'Unable to open invoice');}
