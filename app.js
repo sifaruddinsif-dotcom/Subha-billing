@@ -1559,11 +1559,18 @@ async function viewInvoice(id){
     const gstin=i.gstin||'-';
     const supply=i.state||b.state||'-';
     const taxGroups={};
+    let taxAnalysisTaxable=0, taxAnalysisCGST=0, taxAnalysisSGST=0, taxAnalysisIGST=0;
     (i.items||[]).forEach(x=>{
       const hsn=String(x.hsn||'-');
       const base=Number(x.taxable)||0;
       const tax=Number(x.tax)||0;
       const gr=Number(x.gst)||0;
+      taxAnalysisTaxable+=base;
+      if(igst) taxAnalysisIGST+=tax;
+      else {
+        taxAnalysisCGST+=tax/2;
+        taxAnalysisSGST+=tax/2;
+      }
       if(!taxGroups[hsn]) taxGroups[hsn]={hsn,taxable:0,cgst:0,sgst:0,igst:0,gst:gr};
       taxGroups[hsn].taxable+=base;
       if(igst) taxGroups[hsn].igst+=tax;
@@ -1578,8 +1585,8 @@ async function viewInvoice(id){
       const totalTax=igst?g.igst:g.cgst+g.sgst;
       return '<tr><td>'+g.hsn+'</td><td class="r">'+money(g.taxable)+'</td><td class="c">'+(igst?'-':rate.toFixed(0)+'%')+'</td><td class="r">'+(igst?'-':money(g.cgst))+'</td><td class="c">'+(igst?'-':rate.toFixed(0)+'%')+'</td><td class="r">'+(igst?'-':money(g.sgst))+'</td><td class="r">'+money(totalTax)+'</td></tr>';
     }).join('');
-    const taxAnalysisTotalTax=Number(i.cgst||0)+Number(i.sgst||0)+Number(i.igst||0);
-    const taxAnalysis='<div class="tax-analysis"><div class="tax-analysis-title">Tax Analysis</div><table class="tax-analysis-table"><thead><tr><th rowspan="2">HSN/SAC</th><th rowspan="2">Taxable<br>Value</th><th colspan="2">CGST</th><th colspan="2">SGST/UTGST</th><th rowspan="2">Total<br>Tax Amount</th></tr><tr><th>Rate</th><th>Amount</th><th>Rate</th><th>Amount</th></tr></thead><tbody>'+taxAnalysisRows+'</tbody><tfoot><tr><th>Total</th><th class="r">'+money(i.taxable)+'</th><th></th><th class="r">'+money(i.cgst)+'</th><th></th><th class="r">'+money(i.sgst)+'</th><th class="r">'+money(taxAnalysisTotalTax)+'</th></tr></tfoot></table></div>';
+    const taxAnalysisTotalTax=taxAnalysisCGST+taxAnalysisSGST+taxAnalysisIGST;
+    const taxAnalysis='<div class="tax-analysis"><div class="tax-analysis-title">Tax Analysis</div><table class="tax-analysis-table"><thead><tr><th rowspan="2">HSN/SAC</th><th rowspan="2">Taxable<br>Value</th><th colspan="2">CGST</th><th colspan="2">SGST/UTGST</th><th rowspan="2">Total<br>Tax Amount</th></tr><tr><th>Rate</th><th>Amount</th><th>Rate</th><th>Amount</th></tr></thead><tbody>'+taxAnalysisRows+'</tbody><tfoot><tr><th>Total</th><th class="r">'+money(taxAnalysisTaxable)+'</th><th></th><th class="r">'+money(taxAnalysisCGST)+'</th><th></th><th class="r">'+money(taxAnalysisSGST)+'</th><th class="r">'+money(taxAnalysisTotalTax)+'</th></tr></tfoot></table></div>';
 
     const rows=(i.items||[]).map((x,n)=>{
       const qty=Number(x.qty)||0, rate=Number(x.rate)||0, base=Number(x.taxable)||0, tax=Number(x.tax)||0;
