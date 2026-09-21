@@ -40,3 +40,20 @@ window.openProduct=function(id){
 
 /* GST RATE DROPDOWN FOR ADD/EDIT PRODUCT */
 window.openProduct=function(id){const p=id?state.products.find(x=>x.id==id):{};const rates=[0,5,12,18,28,40];$('#modalbox').innerHTML='<div class="toolbar"><h3>'+(id?'Edit':'Add')+' Product</h3><button class="btn" onclick="closeModal()">×</button></div><div class="formgrid">'+[['name','Product Name'],['sku','SKU'],['barcode','Barcode'],['category','Category'],['unit','Unit'],['hsn','HSN/SAC'],['purchase_price','Purchase Price'],['sale_price','Sale Price']].map(f=>'<div class="field"><label>'+f[1]+'</label><input id="p_'+f[0]+'" value="'+(p[f[0]]??'')+'"></div>').join('')+'<div class="field"><label>GST %</label><select id="p_gst">'+rates.map(r=>'<option value="'+r+'" '+(Number(p.gst||0)===r?'selected':'')+'>'+r+'%</option>').join('')+'</select></div><div class="field"><label>Opening Stock</label><input id="p_stock" value="'+(p.stock??'')+'"></div><div class="field"><label>Minimum Stock</label><input id="p_min_stock" value="'+(p.min_stock??'')+'"></div></div><button class="btn primary" onclick="saveProduct('+(id||0)+')">Save Product</button>';openModal()};
+
+/* SUBHA BILLING defaults: open new invoice with the permanent school customer selected. */
+const _subhaOriginalNewInvoice=window.newInvoice;
+window.newInvoice=async function(){
+  if(typeof _subhaOriginalNewInvoice==='function'){
+    await _subhaOriginalNewInvoice();
+    const c=(state.customers||[]).find(x=>x.name==='MAHUR HIGH SECONDARY SCHOOL');
+    const sel=$('#icust');
+    if(c&&sel) sel.value=String(c.id);
+  }
+};
+
+/* Show that product sale prices are GST-inclusive in the invoice workflow. */
+const _subhaOriginalSaveProduct=window.saveProduct;
+window.saveProduct=async function(id){
+  return _subhaOriginalSaveProduct(id);
+};
