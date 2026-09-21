@@ -51,9 +51,3 @@ window.newInvoice=async function(){
     if(c&&sel) sel.value=String(c.id);
   }
 };
-
-/* Show that product sale prices are GST-inclusive in the invoice workflow. */
-const _subhaOriginalSaveProduct=window.saveProduct;
-window.saveProduct=async function(id){
-  return _subhaOriginalSaveProduct(id);
-};
