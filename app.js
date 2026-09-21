@@ -1182,6 +1182,7 @@ function renderInvoiceModal(
   products,
   rows
 ){
+  window._invoiceRows=rows;
 
   $('#modalbox').innerHTML=`
 
@@ -1460,7 +1461,7 @@ function renderInvoiceModal(
 
     <button
       class="btn primary"
-      onclick='saveInvoice(${JSON.stringify(rows)})'
+      onclick='saveInvoice(window._invoiceRows)'
     >
       Create Invoice
     </button>
