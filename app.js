@@ -1307,11 +1307,11 @@ function renderInvoiceModal(
 
               <select
                 onchange="
-                  rows[${i}].product_id=this.value;
-                  rows[${i}].rate=Number(
+                  window._invoiceRows[${i}].product_id=this.value;
+                  window._invoiceRows[${i}].rate=Number(
                     this.selectedOptions[0].dataset.rate||0
                   );
-                  rows[${i}].gst=Number(
+                  window._invoiceRows[${i}].gst=Number(
                     this.selectedOptions[0].dataset.gst||18
                   );
                   renderInvoiceModal(
@@ -1347,7 +1347,7 @@ function renderInvoiceModal(
                 step="0.01"
                 value="${r.qty}"
                 oninput="
-                  rows[${i}].qty=Math.max(0,Number(this.value)||0);
+                  window._invoiceRows[${i}].qty=Math.max(0,Number(this.value)||0);
                   updateInvoiceTotals(rows);
                 "
               >
@@ -1361,7 +1361,7 @@ function renderInvoiceModal(
                 step="0.01"
                 value="${r.rate}"
                 oninput="
-                  rows[${i}].rate=Math.max(0,Number(this.value)||0);
+                  window._invoiceRows[${i}].rate=Math.max(0,Number(this.value)||0);
                   updateInvoiceTotals(rows);
                 "
               >
@@ -1375,7 +1375,7 @@ function renderInvoiceModal(
                 step="0.01"
                 value="${r.discount}"
                 oninput="
-                  rows[${i}].discount=Math.max(0,Number(this.value)||0);
+                  window._invoiceRows[${i}].discount=Math.max(0,Number(this.value)||0);
                   updateInvoiceTotals(rows);
                 "
               >
@@ -1385,7 +1385,7 @@ function renderInvoiceModal(
             <td>
               <select
                 onchange="
-                  rows[${i}].gst=Number(this.value);
+                  window._invoiceRows[${i}].gst=Number(this.value);
                   updateInvoiceTotals(rows)
                 "
               >
@@ -1400,7 +1400,7 @@ function renderInvoiceModal(
               <button
                 class="btn danger"
                 onclick="
-                  rows.splice(${i},1);
+                  window._invoiceRows.splice(${i},1);
                   renderInvoiceModal(
                     state.customers,
                     state.products,
@@ -1426,7 +1426,7 @@ function renderInvoiceModal(
       <button
         class="btn"
         onclick="
-          rows.push({
+          window._invoiceRows.push({
             product_id:products[0]?.id||'',
             qty:1,
             rate:products[0]?.sale_price||0,
