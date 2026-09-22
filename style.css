@@ -1410,3 +1410,13 @@ button{
 .invoice-print.tally-invoice .tax-analysis-table td:nth-child(5){width:10%!important}
 .invoice-print.tally-invoice .tax-analysis-table td:nth-child(6){width:14%!important}
 .invoice-print.tally-invoice .tax-analysis-table td:nth-child(7){width:15%!important}
+
+
+.company-seal-signature{
+  display:block;
+  width:90%;
+  max-width:210px;
+  height:auto;
+  margin:5px auto 2px;
+  object-fit:contain;
+}
