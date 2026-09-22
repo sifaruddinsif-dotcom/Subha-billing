@@ -1420,3 +1420,18 @@ button{
   margin:5px auto 2px;
   object-fit:contain;
 }
+
+
+/* Mobile invoice GST type visibility */
+@media (max-width: 700px){
+  .invoice-items{font-size:10px;table-layout:fixed}
+  .invoice-items th,.invoice-items td{padding:3px}
+  .invoice-items input,.invoice-items select{padding:5px 3px;font-size:10px;min-width:0}
+  .invoice-items th:nth-child(1){width:25%}
+  .invoice-items th:nth-child(2){width:10%}
+  .invoice-items th:nth-child(3){width:11%}
+  .invoice-items th:nth-child(4){width:12%}
+  .invoice-items th:nth-child(5){width:12%}
+  .invoice-items th:nth-child(6){width:22%}
+  .invoice-items th:nth-child(7){width:8%}
+}
