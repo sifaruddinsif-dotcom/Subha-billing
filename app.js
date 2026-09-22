@@ -1317,7 +1317,7 @@ function renderInvoiceModal(
                   renderInvoiceModal(
                     state.customers,
                     state.products,
-                    rows
+                    window._invoiceRows
                   )
                 "
               >
@@ -1348,7 +1348,7 @@ function renderInvoiceModal(
                 value="${r.qty}"
                 oninput="
                   window._invoiceRows[${i}].qty=Math.max(0,Number(this.value)||0);
-                  updateInvoiceTotals(rows);
+                  updateInvoiceTotals(window._invoiceRows);
                 "
               >
 
@@ -1362,7 +1362,7 @@ function renderInvoiceModal(
                 value="${r.rate}"
                 oninput="
                   window._invoiceRows[${i}].rate=Math.max(0,Number(this.value)||0);
-                  updateInvoiceTotals(rows);
+                  updateInvoiceTotals(window._invoiceRows);
                 "
               >
 
@@ -1376,7 +1376,7 @@ function renderInvoiceModal(
                 value="${r.discount}"
                 oninput="
                   window._invoiceRows[${i}].discount=Math.max(0,Number(this.value)||0);
-                  updateInvoiceTotals(rows);
+                  updateInvoiceTotals(window._invoiceRows);
                 "
               >
 
@@ -1386,7 +1386,7 @@ function renderInvoiceModal(
               <select
                 onchange="
                   window._invoiceRows[${i}].gst=Number(this.value);
-                  updateInvoiceTotals(rows)
+                  updateInvoiceTotals(window._invoiceRows)
                 "
               >
                 ${[0,5,12,18,28,40].map(g=>`
@@ -1404,7 +1404,7 @@ function renderInvoiceModal(
                   renderInvoiceModal(
                     state.customers,
                     state.products,
-                    rows
+                    window._invoiceRows
                   )
                 "
               >
@@ -1437,7 +1437,7 @@ function renderInvoiceModal(
           renderInvoiceModal(
             state.customers,
             state.products,
-            rows
+            window._invoiceRows
           )
         "
       >
@@ -1527,7 +1527,7 @@ function renderInvoiceModal(
   `;
 
   openModal();
-  updateInvoiceTotals(rows);
+  updateInvoiceTotals(window._invoiceRows);
 }
 
 /* =========================
