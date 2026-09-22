@@ -1165,6 +1165,7 @@ async function newInvoice(){
       qty:1,
       rate:products[0]?.sale_price||0,
       gst:Number(products[0]?.gst)||18,
+      gst_mode:'EXCLUDING',
       discount:0
     });
 
@@ -1186,10 +1187,13 @@ function updateInvoiceTotals(rows){
     const rate=Math.max(0,Number(r.rate)||0);
     const disc=Math.max(0,Number(r.discount)||0);
     const gst=Math.max(0,Number(r.gst??0)||0);
-    const base=Math.max(0,qty*rate-disc);
-    subtotal+=qty*rate;
+    const gross=qty*rate;
+    const netGross=Math.max(0,gross-disc);
+    const including=String(r.gst_mode||'EXCLUDING').toUpperCase()==='INCLUDING';
+    const base=including ? (gst>0 ? netGross/(1+gst/100) : netGross) : netGross;
+    subtotal+=gross;
     taxable+=base;
-    tax+=base*gst/100;
+    tax+=including ? (netGross-base) : (base*gst/100);
   });
   const extra=Math.max(0,Number($('#idisc')?.value)||0);
   taxable=Math.max(0,taxable-extra);
@@ -1292,6 +1296,7 @@ function renderInvoiceModal(
           <th>Rate</th>
           <th>Discount</th>
           <th>GST %</th>
+          <th>GST Type</th>
           <th></th>
         </tr>
 
@@ -1394,6 +1399,12 @@ function renderInvoiceModal(
                 `).join('')}
               </select>
             </td>
+            <td>
+              <select onchange="window._invoiceRows[${i}].gst_mode=this.value; updateInvoiceTotals(window._invoiceRows)">
+                <option value="EXCLUDING" ${String(r.gst_mode||'EXCLUDING')==='EXCLUDING'?'selected':''}>Excluding GST</option>
+                <option value="INCLUDING" ${String(r.gst_mode||'EXCLUDING')==='INCLUDING'?'selected':''}>Including GST</option>
+              </select>
+            </td>
 
             <td>
 
@@ -1431,6 +1442,7 @@ function renderInvoiceModal(
             qty:1,
             rate:state.products[0]?.sale_price||0,
             gst:Number(state.products[0]?.gst)||18,
+            gst_mode:'EXCLUDING',
             discount:0
           });
 
