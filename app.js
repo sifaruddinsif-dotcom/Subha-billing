@@ -1427,10 +1427,10 @@ function renderInvoiceModal(
         class="btn"
         onclick="
           window._invoiceRows.push({
-            product_id:products[0]?.id||'',
+            product_id:state.products[0]?.id||'',
             qty:1,
-            rate:products[0]?.sale_price||0,
-            gst:Number(products[0]?.gst)||18,
+            rate:state.products[0]?.sale_price||0,
+            gst:Number(state.products[0]?.gst)||18,
             discount:0
           });
 
