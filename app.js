@@ -1164,6 +1164,7 @@ async function newInvoice(){
       product_id:products[0]?.id||'',
       qty:1,
       rate:products[0]?.sale_price||0,
+      gst:Number(products[0]?.gst)||18,
       discount:0
     });
 
@@ -1175,6 +1176,33 @@ async function newInvoice(){
   };
 
   row();
+}
+
+function updateInvoiceTotals(rows){
+  const taxType=$('#itax')?.value||'LOCAL';
+  let subtotal=0, taxable=0, tax=0;
+  rows.forEach(r=>{
+    const qty=Math.max(0,Number(r.qty)||0);
+    const rate=Math.max(0,Number(r.rate)||0);
+    const disc=Math.max(0,Number(r.discount)||0);
+    const gst=Math.max(0,Number(r.gst??0)||0);
+    const base=Math.max(0,qty*rate-disc);
+    subtotal+=qty*rate;
+    taxable+=base;
+    tax+=base*gst/100;
+  });
+  const extra=Math.max(0,Number($('#idisc')?.value)||0);
+  taxable=Math.max(0,taxable-extra);
+  tax=taxable*(rows.length?tax/Math.max(1,taxable+extra):0);
+  const total=taxable+tax;
+  const el=$('#invoice-live-total');
+  if(el) el.textContent=money(total);
+  const sub=$('#invoice-live-subtotal');
+  if(sub) sub.textContent=money(subtotal);
+  const tx=$('#invoice-live-taxable');
+  if(tx) tx.textContent=money(taxable);
+  const tg=$('#invoice-live-tax');
+  if(tg) tg.textContent=money(tax);
 }
 
 function renderInvoiceModal(
@@ -1263,6 +1291,7 @@ function renderInvoiceModal(
           <th>Qty</th>
           <th>Rate</th>
           <th>Discount</th>
+          <th>GST %</th>
           <th></th>
         </tr>
 
@@ -1282,6 +1311,9 @@ function renderInvoiceModal(
                   rows[${i}].rate=Number(
                     this.selectedOptions[0].dataset.rate||0
                   );
+                  rows[${i}].gst=Number(
+                    this.selectedOptions[0].dataset.gst||18
+                  );
                   renderInvoiceModal(
                     state.customers,
                     state.products,
@@ -1294,6 +1326,7 @@ function renderInvoiceModal(
 
                   <option
                     data-rate="${p.sale_price}"
+                    data-gst="${p.gst}"
                     value="${p.id}"
                     ${p.id==r.product_id?'selected':''}
                   >
@@ -1313,8 +1346,9 @@ function renderInvoiceModal(
                 min="0.01"
                 step="0.01"
                 value="${r.qty}"
-                onchange="
-                  rows[${i}].qty=Number(this.value)
+                oninput="
+                  rows[${i}].qty=Math.max(0,Number(this.value)||0);
+                  updateInvoiceTotals(rows);
                 "
               >
 
@@ -1326,8 +1360,9 @@ function renderInvoiceModal(
                 type="number"
                 step="0.01"
                 value="${r.rate}"
-                onchange="
-                  rows[${i}].rate=Number(this.value)
+                oninput="
+                  rows[${i}].rate=Math.max(0,Number(this.value)||0);
+                  updateInvoiceTotals(rows);
                 "
               >
 
@@ -1339,11 +1374,25 @@ function renderInvoiceModal(
                 type="number"
                 step="0.01"
                 value="${r.discount}"
-                onchange="
-                  rows[${i}].discount=Number(this.value)
+                oninput="
+                  rows[${i}].discount=Math.max(0,Number(this.value)||0);
+                  updateInvoiceTotals(rows);
                 "
               >
 
+            </td>
+
+            <td>
+              <select
+                onchange="
+                  rows[${i}].gst=Number(this.value);
+                  updateInvoiceTotals(rows)
+                "
+              >
+                ${[0,5,12,18,28,40].map(g=>`
+                  <option value="${g}" ${Number(r.gst??products.find(p=>p.id==r.product_id)?.gst??18)===g?'selected':''}>${g}%</option>
+                `).join('')}
+              </select>
             </td>
 
             <td>
@@ -1381,6 +1430,7 @@ function renderInvoiceModal(
             product_id:products[0]?.id||'',
             qty:1,
             rate:products[0]?.sale_price||0,
+            gst:Number(products[0]?.gst)||18,
             discount:0
           });
 
@@ -1411,6 +1461,7 @@ function renderInvoiceModal(
           id="idisc"
           type="number"
           value="0"
+          oninput="updateInvoiceTotals(window._invoiceRows)"
         >
 
       </div>
@@ -1459,6 +1510,13 @@ function renderInvoiceModal(
 
     </div>
 
+    <div class="invoice-live-summary" style="margin:14px 0;padding:12px;border:1px solid #ddd;border-radius:8px">
+      <div><span>Subtotal: </span><b id="invoice-live-subtotal">₹ 0.00</b></div>
+      <div><span>Taxable Value: </span><b id="invoice-live-taxable">₹ 0.00</b></div>
+      <div><span>GST: </span><b id="invoice-live-tax">₹ 0.00</b></div>
+      <div style="font-size:18px;margin-top:6px"><span>Grand Total: </span><b id="invoice-live-total">₹ 0.00</b></div>
+    </div>
+
     <button
       class="btn primary"
       onclick='saveInvoice(window._invoiceRows)'
@@ -1469,6 +1527,7 @@ function renderInvoiceModal(
   `;
 
   openModal();
+  updateInvoiceTotals(rows);
 }
 
 /* =========================
