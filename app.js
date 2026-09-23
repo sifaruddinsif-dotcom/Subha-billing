@@ -1,21 +1,25 @@
-const COMPANY_SEAL_SIGNATURE_DATA = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="420" height="300" viewBox="0 0 420 300">
-<rect width="420" height="300" fill="white"/>
+const COMPANY_SEAL_SIGNATURE_DATA = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="500" height="620" viewBox="0 0 500 620">
+<rect width="500" height="620" fill="#fff"/>
+<defs>
+ <path id="topArc" d="M 105 235 A 145 145 0 0 1 395 235"/>
+ <path id="bottomArc" d="M 395 255 A 145 145 0 0 1 105 255"/>
+</defs>
 <g fill="none" stroke="#123c9c">
-<circle cx="125" cy="105" r="88" stroke-width="4"/>
-<circle cx="125" cy="105" r="78" stroke-width="2"/>
-<circle cx="125" cy="105" r="55" stroke-width="2"/>
+ <circle cx="250" cy="225" r="160" stroke-width="6"/>
+ <circle cx="250" cy="225" r="146" stroke-width="3"/>
+ <circle cx="250" cy="225" r="104" stroke-width="3"/>
 </g>
-<g fill="#123c9c" font-family="Arial, sans-serif" text-anchor="middle" font-weight="700">
-<text x="125" y="53" font-size="15">P.M. ENTERPRISE</text>
-<text x="125" y="164" font-size="11">HAFLONG, ASSAM - 788819</text>
-<text x="65" y="111" font-size="20">★</text>
-<text x="185" y="111" font-size="20">★</text>
+<g fill="#123c9c" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle">
+ <text font-size="31" letter-spacing="1.2"><textPath href="#topArc" startOffset="50%">P.M. ENTERPRISE</textPath></text>
+ <text font-size="18" letter-spacing=".5"><textPath href="#bottomArc" startOffset="50%">HAFLONG, ASSAM - 788819</textPath></text>
+ <text x="104" y="237" font-size="31">★</text>
+ <text x="396" y="237" font-size="31">★</text>
 </g>
-<g fill="#123c9c">
-<text x="205" y="235" font-size="48" font-family="cursive" font-style="italic">P.M. Enterprise</text>
-<path d="M195 255 Q290 275 395 245" fill="none" stroke="#123c9c" stroke-width="3"/>
+<g fill="#123c9c" stroke="#123c9c">
+ <text x="250" y="490" text-anchor="middle" font-size="72" font-family="cursive" font-style="italic" font-weight="500">P.M. Enterprise</text>
+ <path d="M115 520 Q245 550 395 505" fill="none" stroke-width="4"/>
 </g>
-<text x="205" y="285" font-size="11" font-family="Arial,sans-serif" fill="#123c9c">AUTHORISED SIGNATORY</text>
+<text x="250" y="565" text-anchor="middle" font-size="13" font-family="Arial,sans-serif" fill="#123c9c" letter-spacing="1">AUTHORISED SIGNATORY</text>
 </svg>`);const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
 let token=localStorage.getItem('sb_token'),
