@@ -1435,3 +1435,104 @@ button{
   .invoice-items th:nth-child(6){width:22%}
   .invoice-items th:nth-child(7){width:8%}
 }
+
+
+/* =========================================================
+   FINAL PDF FIX — ONE A4 PAGE / NO DUPLICATE SECOND PAGE
+   Keep the approved invoice design unchanged.
+========================================================= */
+@media print{
+  html, body{
+    width:210mm!important;
+    height:297mm!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+
+  .modal,
+  .modal.open{
+    position:static!important;
+    inset:auto!important;
+    display:block!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    padding:0!important;
+    margin:0!important;
+    overflow:visible!important;
+    background:transparent!important;
+    align-items:initial!important;
+    justify-content:initial!important;
+  }
+
+  .modalbox{
+    position:static!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+  }
+
+  .invoice-print.tally-invoice{
+    position:relative!important;
+    left:auto!important;
+    top:auto!important;
+    width:190mm!important;
+    height:287mm!important;
+    min-height:287mm!important;
+    max-height:287mm!important;
+    margin:0 auto!important;
+    padding:0!important;
+    overflow:hidden!important;
+    transform-origin:top center!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .invoice-print.tally-invoice .tally-top,
+  .invoice-print.tally-invoice .tally-items,
+  .invoice-print.tally-invoice .amount-total-row,
+  .invoice-print.tally-invoice .tax-analysis,
+  .invoice-print.tally-invoice .bottom-three,
+  .invoice-print.tally-invoice .declaration-row{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .invoice-print.tally-invoice .tally-items tbody{
+    height:58mm!important;
+  }
+
+  .invoice-print.tally-invoice .company-tax-row{
+    min-height:29mm!important;
+  }
+
+  .invoice-print.tally-invoice .bill-to-box{
+    min-height:30mm!important;
+  }
+
+  .invoice-print.tally-invoice .bottom-three{
+    min-height:27mm!important;
+  }
+
+  .invoice-print.tally-invoice .declaration-row{
+    min-height:18mm!important;
+  }
+
+  .invoice-print.tally-invoice .computer-generated{
+    padding:2px!important;
+    font-size:7px!important;
+  }
+
+  .invoice-print.tally-invoice .company-seal-signature{
+    max-height:48mm!important;
+  }
+}
