@@ -1,12 +1,15 @@
 const COMPANY_SEAL_SIGNATURE_DATA = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="420" height="300" viewBox="0 0 420 300">
 <rect width="420" height="300" fill="white"/>
 <g fill="none" stroke="#123c9c">
-<circle cx="125" cy="105" r="88" stroke-width="4"/><circle cx="125" cy="105" r="78" stroke-width="2"/><circle cx="125" cy="105" r="55" stroke-width="2"/>
+<circle cx="125" cy="105" r="88" stroke-width="4"/>
+<circle cx="125" cy="105" r="78" stroke-width="2"/>
+<circle cx="125" cy="105" r="55" stroke-width="2"/>
 </g>
-<g fill="#123c9c" font-family="Arial,sans-serif" text-anchor="middle">
-<text x="125" y="55" font-size="16" font-weight="700">P.M. ENTERPRISE</text>
-<text x="125" y="160" font-size="13" font-weight="700">HAFLONG, ASSAM - 788819</text>
-<text x="65" y="111" font-size="20">★</text><text x="185" y="111" font-size="20">★</text>
+<g fill="#123c9c" font-family="Arial, sans-serif" text-anchor="middle" font-weight="700">
+<text x="125" y="53" font-size="15">P.M. ENTERPRISE</text>
+<text x="125" y="164" font-size="11">HAFLONG, ASSAM - 788819</text>
+<text x="65" y="111" font-size="20">★</text>
+<text x="185" y="111" font-size="20">★</text>
 </g>
 <g fill="#123c9c">
 <text x="205" y="235" font-size="48" font-family="cursive" font-style="italic">P.M. Enterprise</text>
