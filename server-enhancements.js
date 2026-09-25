@@ -27,7 +27,7 @@ module.exports=function(app,db,auth,settings,nextNo,bcrypt){
    db.prepare('UPDATE products SET sale_price=?,gst=?,unit=? WHERE id=?').run(40,18,'SET',defaultProduct.id);
  }
 
- db.exec('CREATE TABLE IF NOT EXISTS expenses(id INTEGER PRIMARY KEY AUTOINCREMENT,date TEXT DEFAULT CURRENT_TIMESTAMP,category TEXT NOT NULL,description TEXT,amount REAL DEFAULT 0,mode TEXT DEFAULT 'Cash',reference TEXT,note TEXT)');
+ db.exec("CREATE TABLE IF NOT EXISTS expenses(id INTEGER PRIMARY KEY AUTOINCREMENT,date TEXT DEFAULT CURRENT_TIMESTAMP,category TEXT NOT NULL,description TEXT,amount REAL DEFAULT 0,mode TEXT DEFAULT 'Cash',reference TEXT,note TEXT)");
  db.exec('CREATE TABLE IF NOT EXISTS stock_movements(id INTEGER PRIMARY KEY AUTOINCREMENT,product_id INTEGER,qty REAL,kind TEXT,ref_id INTEGER,created_at TEXT DEFAULT CURRENT_TIMESTAMP)');
  const num=v=>Number.isFinite(Number(v))?Number(v):0, status=(t,p)=>p>=t-.01?'Paid':p>0?'Partial':'Pending';
  const prod=id=>db.prepare('SELECT * FROM products WHERE id=?').get(id);
