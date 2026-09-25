@@ -188,6 +188,9 @@ function shell(){
             ['customers','♟ Customers'],
             ['products','▦ Products / Stock'],
             ['purchase','▰ Purchase'],
+            ['expenses','↘ Expenses'],
+            ['ledger','▤ Ledger'],
+            ['stockmovements','↕ Stock Movement'],
             ['payments','₹ Payments'],
             ['reports','◔ Reports'],
             ['gst','◎ GST Reports'],
@@ -317,6 +320,18 @@ async function go(p){
 
   if(p==='products')
     return products();
+
+  if(p==='purchase')
+    return purchase();
+
+  if(p==='expenses')
+    return expenses();
+
+  if(p==='ledger')
+    return ledger();
+
+  if(p==='stockmovements')
+    return stockMovements();
 
   if(p==='payments')
     return payments();
@@ -2129,6 +2144,61 @@ async function saveSettings(){
   toast('Settings saved');
 
   go('dashboard');
+}
+
+
+/* =========================
+   ERP PURCHASE / EXPENSE / LEDGER / STOCK
+========================= */
+
+async function purchase(){
+  const rows=await api('/purchases');
+  $('#content').innerHTML=header('Purchase',`
+    <button class="btn primary" onclick="newPurchase()">＋ New Purchase</button>
+  `)+`<div class="panel"><table class="table"><thead><tr><th>Date</th><th>Purchase No</th><th>Supplier</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead><tbody>
+  ${rows.map(x=>`<tr><td>${x.created_at}</td><td><b>${x.purchase_no}</b></td><td>${x.supplier}</td><td>${money(x.total)}</td><td>${money(x.paid)}</td><td>${money(x.total-x.paid)}</td><td>${x.status}</td><td><button class="btn danger" onclick="deletePurchase(${x.id})">Delete</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+async function newPurchase(){
+  const [suppliers,products]=await Promise.all([api('/suppliers'),api('/products')]);
+  if(!products.length){alert('Add a product first.');return;}
+  window._purchaseRows=[{product_id:products[0].id,qty:1,rate:Number(products[0].purchase_price)||0,gst:Number(products[0].gst)||18}];
+  $('#modalbox').innerHTML=`<div class="toolbar"><h3>New Purchase</h3><button class="btn" onclick="closeModal()">×</button></div>
+  <div class="formgrid"><div class="field"><label>Supplier</label><select id="psup"><option value="">Walk-in Supplier</option>${suppliers.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div class="field"><label>Payment</label><input id="ppaid" type="number" value="0" min="0"></div></div>
+  <table class="invoice-items"><thead><tr><th>Product</th><th>Qty</th><th>Rate</th><th>GST %</th><th></th></tr></thead><tbody>${window._purchaseRows.map((r,i)=>`<tr><td><select onchange="window._purchaseRows[${i}].product_id=Number(this.value);window._purchaseRows[${i}].rate=Number(this.selectedOptions[0].dataset.rate||0);renderPurchaseRows(${JSON.stringify(suppliers)},${JSON.stringify(products)})">${products.map(p=>`<option data-rate="${p.purchase_price}" value="${p.id}" ${p.id==r.product_id?'selected':''}>${p.name}</option>`).join('')}</select></td><td><input type="number" min="0.01" value="${r.qty}" oninput="window._purchaseRows[${i}].qty=Number(this.value)||0"></td><td><input type="number" value="${r.rate}" oninput="window._purchaseRows[${i}].rate=Number(this.value)||0"></td><td><select onchange="window._purchaseRows[${i}].gst=Number(this.value)">${[0,5,12,18,28,40].map(g=>`<option value="${g}" ${g===Number(r.gst)?'selected':''}>${g}%</option>`).join('')}</select></td><td><button class="btn danger" onclick="window._purchaseRows.splice(${i},1);renderPurchaseRows(${JSON.stringify(suppliers)},${JSON.stringify(products)})">×</button></td></tr>`).join('')}</tbody></table>
+  <button class="btn" onclick="window._purchaseRows.push({product_id:products[0].id,qty:1,rate:Number(products[0].purchase_price)||0,gst:Number(products[0].gst)||18});renderPurchaseRows(${JSON.stringify(suppliers)},${JSON.stringify(products)})">＋ Add Item</button>
+  <button class="btn primary" onclick="savePurchase()">Save Purchase</button>`;
+  openModal();
+}
+function renderPurchaseRows(s,p){newPurchase(); /* form is re-rendered from current rows by newPurchase fallback */ window._purchaseRows=window._purchaseRows||[];}
+async function savePurchase(){
+  try{const d=await api('/purchases',{method:'POST',body:JSON.stringify({supplier_id:$('#psup').value||null,paid:Number($('#ppaid').value)||0,items:window._purchaseRows})});closeModal();await purchase();toast('Purchase saved: '+d.purchase_no)}catch(e){alert(e.message)}
+}
+async function deletePurchase(id){if(!confirm('Delete this purchase? Stock will be reversed.'))return;try{await api('/purchases/'+id,{method:'DELETE'});await purchase();toast('Purchase deleted')}catch(e){alert(e.message)}}
+
+async function expenses(){
+  const rows=await api('/expenses');
+  $('#content').innerHTML=header('Expenses',`<button class="btn primary" onclick="newExpense()">＋ Add Expense</button>`)+`<div class="panel"><table class="table"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Mode</th><th>Reference</th><th></th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.date}</td><td>${x.category}</td><td>${x.description||'-'}</td><td>${money(x.amount)}</td><td>${x.mode}</td><td>${x.reference||'-'}</td><td><button class="btn danger" onclick="deleteExpense(${x.id})">Delete</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+function newExpense(){
+  $('#modalbox').innerHTML=`<div class="toolbar"><h3>Add Expense</h3><button class="btn" onclick="closeModal()">×</button></div><div class="formgrid">
+  <div class="field"><label>Category</label><input id="ecat" placeholder="Transport, Electricity, Salary..."></div>
+  <div class="field"><label>Amount</label><input id="eamt" type="number" min="0.01"></div>
+  <div class="field"><label>Description</label><input id="edesc"></div>
+  <div class="field"><label>Mode</label><select id="emode"><option>Cash</option><option>UPI</option><option>Bank</option><option>Card</option></select></div>
+  <div class="field"><label>Reference</label><input id="eref"></div></div><button class="btn primary" onclick="saveExpense()">Save Expense</button>`;openModal();
+}
+async function saveExpense(){try{await api('/expenses',{method:'POST',body:JSON.stringify({category:$('#ecat').value,amount:Number($('#eamt').value),description:$('#edesc').value,mode:$('#emode').value,reference:$('#eref').value})});closeModal();await expenses();toast('Expense saved')}catch(e){alert(e.message)}}
+async function deleteExpense(id){if(!confirm('Delete expense?'))return;try{await api('/expenses/'+id,{method:'DELETE'});expenses()}catch(e){alert(e.message)}}
+
+async function ledger(){
+  const customers=await api('/customers');
+  $('#content').innerHTML=header('Customer Ledger')+`<div class="panel"><div class="field"><label>Select Customer</label><select id="ledgerCustomer" onchange="loadLedger(this.value)"><option value="">Select customer</option>${customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div id="ledgerTable" class="tablewrap"><div class="muted">Select a customer to view ledger.</div></div></div>`;
+}
+async function loadLedger(id){if(!id)return;const rows=await api('/ledger?type=customer&id='+id);$('#ledgerTable').innerHTML=`<table class="table"><thead><tr><th>Date</th><th>Reference</th><th>Type</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.date}</td><td>${x.ref}</td><td>${x.kind}</td><td>${money(x.debit)}</td><td>${money(x.credit)}</td><td>${money(x.balance)}</td></tr>`).join('')}</tbody></table>`;}
+
+async function stockMovements(){
+  const rows=await api('/stock-movements');
+  $('#content').innerHTML=header('Stock Movement')+`<div class="panel"><table class="table"><thead><tr><th>Date</th><th>Product</th><th>Movement</th><th>Quantity</th><th>Reference</th><th>Unit</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.created_at}</td><td>${x.name||'-'}</td><td>${x.kind}</td><td class="${Number(x.qty)<0?'low':''}">${x.qty}</td><td>${x.ref_id||'-'}</td><td>${x.unit||'-'}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 /* =========================
