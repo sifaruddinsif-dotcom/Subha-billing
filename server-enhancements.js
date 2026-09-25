@@ -40,7 +40,6 @@ module.exports=function(app,db,auth,settings,nextNo,bcrypt){
   if(p.startsWith('/expenses/')&&req.method==='DELETE'){const id=Number(p.split('/')[2]);db.prepare('DELETE FROM expenses WHERE id=?').run(id);return res.json({ok:true})}
   if(p==='/stock-movements'&&req.method==='GET'){const rows=db.prepare('SELECT sm.*,p.name,p.unit FROM stock_movements sm LEFT JOIN products p ON p.id=sm.product_id ORDER BY sm.id DESC LIMIT 500').all();return res.json(rows)}
   if(p==='/ledger'&&req.method==='GET'){const type=String(req.query.type||'customer');const id=Number(req.query.id||0);if(!id)return res.json([]);if(type==='supplier'){return res.json(db.prepare("SELECT p.created_at date,p.purchase_no ref,'PURCHASE' kind,p.total debit,p.paid credit,(p.total-p.paid) balance FROM purchases p WHERE p.supplier_id=? ORDER BY p.id").all(id));}return res.json(db.prepare("SELECT i.created_at date,i.invoice_no ref,'SALE' kind,i.total debit,i.paid credit,(i.total-i.paid) balance FROM invoices i WHERE i.customer_id=? ORDER BY i.id").all(id))}
- const mw=app.use('/api',auth,(req,res,next)=>{try{const p=req.path
   if(p==='/invoices'&&req.method==='POST')return res.json(createInvoice(req.body||{}));
   if(p==='/purchases'&&req.method==='GET')return res.json(db.prepare('SELECT p.*,COALESCE(s.name,"Walk-in Supplier") supplier FROM purchases p LEFT JOIN suppliers s ON s.id=p.supplier_id ORDER BY p.id DESC').all());
   if(p==='/purchases'&&req.method==='POST')return res.json(createPurchase(req.body||{}));
