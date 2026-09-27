@@ -32,7 +32,53 @@ module.exports=function(app,db,auth,settings,nextNo,bcrypt){
  const num=v=>Number.isFinite(Number(v))?Number(v):0, status=(t,p)=>p>=t-.01?'Paid':p>0?'Partial':'Pending';
  const prod=id=>db.prepare('SELECT * FROM products WHERE id=?').get(id);
  function nextPurchaseNo(){const r=db.prepare('SELECT purchase_no FROM purchases ORDER BY id DESC LIMIT 1').get();let n=1,m=r&&String(r.purchase_no).match(/(\d+)$/);if(m)n=+m[1]+1;return 'PUR-'+new Date().getFullYear()+'-'+String(n).padStart(6,'0')}
- function createInvoice(b,no){const it=b.items||[];if(!it.length)throw Error('Add at least one item');let sub=0,tb=0,a=[];for(const x of it){const p=prod(x.product_id),q=num(x.qty),r=num(x.rate??p?.sale_price),d=num(x.discount);if(!p)throw Error('Product not found');if(q<=0)throw Error('Quantity must be greater than 0');if(q>num(p.stock)+.000001)throw Error(`Insufficient stock for ${p.name}. Available: ${p.stock}`);const gross=Math.max(0,q*r-d);const rateTax=num(p.gst);const base=rateTax>0?gross/(1+rateTax/100):gross;const tax=gross-base;sub+=gross;tb+=base;a.push({p,q,r,d,base,tax})}const ad=Math.max(0,num(b.discount)),taxable=Math.max(0,tb-ad),ratio=tb?taxable/tb:1;let cg=0,sg=0,ig=0;for(const x of a){const t=x.tax*ratio;if(b.tax_type==='IGST')ig+=t;else{cg+=t/2;sg+=t/2}}const raw=taxable+cg+sg+ig,total=Math.round(raw),ro=total-raw,paid=Math.min(total,Math.max(0,num(b.paid))),invno=no||b.invoice_no||nextNo(settings().invoice_prefix);const tx=db.transaction(()=>{const r=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(invno,b.customer_id||null,sub,ad,taxable,cg,sg,ig,ro,total,paid,status(total,paid),b.payment_mode||'Cash',b.notes||'');const id=r.lastInsertRowid,ii=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?)'),up=db.prepare('UPDATE products SET stock=stock-? WHERE id=?'),mv=db.prepare('INSERT INTO stock_movements(product_id,qty,kind,ref_id) VALUES(?,?,?,?)');for(const x of a){const t=x.tax*ratio;ii.run(id,x.p.id,x.p.name,x.q,x.r,x.p.gst,x.d,x.base*ratio,t,x.base*ratio+t);up.run(x.q,x.p.id);mv.run(x.p.id,-x.q,'SALE',id)}if(paid)db.prepare('INSERT INTO payments(customer_id,invoice_id,amount,mode,note) VALUES(?,?,?,?,?)').run(b.customer_id||null,id,paid,b.payment_mode||'Cash','Invoice payment');return id});return {id:tx,invoice_no:invno,total,status:status(total,paid)}}
+ function createInvoice(b,no){
+  const it=b.items||[];
+  if(!it.length)throw Error('Add at least one item');
+  let sub=0,tb=0,a=[];
+  for(const x of it){
+    const p=prod(x.product_id),q=num(x.qty),r=num(x.rate??p?.sale_price),d=Math.max(0,num(x.discount));
+    if(!p)throw Error('Product not found');
+    if(q<=0)throw Error('Quantity must be greater than 0');
+    if(q>num(p.stock)+.000001)throw Error(`Insufficient stock for ${p.name}. Available: ${p.stock}`);
+    const gross=Math.max(0,q*r-d);
+    const g=Math.max(0,num(x.gst??p.gst));
+    const mode=String(x.gst_mode||'EXCLUDING').toUpperCase()==='INCLUDING'?'INCLUDING':'EXCLUDING';
+    const base=mode==='INCLUDING'?(g>0?gross/(1+g/100):gross):gross;
+    const tax=mode==='INCLUDING'?gross-base:base*g/100;
+    sub+=q*r;
+    tb+=base;
+    a.push({p,q,r,d,g,mode,base,tax});
+  }
+  const ad=Math.min(Math.max(0,num(b.discount)),tb);
+  const taxable=Math.max(0,tb-ad);
+  const ratio=tb?taxable/tb:1;
+  let cg=0,sg=0,ig=0;
+  for(const x of a){
+    const t=x.tax*ratio;
+    if(b.tax_type==='IGST')ig+=t;else{cg+=t/2;sg+=t/2}
+  }
+  const raw=taxable+cg+sg+ig,total=Math.round(raw),ro=total-raw;
+  const paid=Math.min(total,Math.max(0,num(b.paid)));
+  const invno=no||b.invoice_no||nextNo(settings().invoice_prefix);
+  const tx=db.transaction(()=>{
+    const r=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+      .run(invno,b.customer_id||null,sub,ad,taxable,cg,sg,ig,ro,total,paid,status(total,paid),b.payment_mode||'Cash',b.notes||'');
+    const id=r.lastInsertRowid;
+    const ii=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+    const up=db.prepare('UPDATE products SET stock=stock-? WHERE id=?');
+    const mv=db.prepare('INSERT INTO stock_movements(product_id,qty,kind,ref_id) VALUES(?,?,?,?)');
+    for(const x of a){
+      const t=x.tax*ratio;
+      ii.run(id,x.p.id,x.p.name,x.q,x.r,x.g,x.mode,x.d,x.base*ratio,t,x.base*ratio+t);
+      up.run(x.q,x.p.id);
+      mv.run(x.p.id,-x.q,'SALE',id);
+    }
+    if(paid)db.prepare('INSERT INTO payments(customer_id,invoice_id,amount,mode,note) VALUES(?,?,?,?,?)').run(b.customer_id||null,id,paid,b.payment_mode||'Cash','Invoice payment');
+    return id;
+  });
+  return {id:tx,invoice_no:invno,total,status:status(total,paid)};
+}
  function createPurchase(b,no){const it=b.items||[];if(!it.length)throw Error('Add at least one item');let total=0,a=[];for(const x of it){const p=prod(x.product_id),q=num(x.qty),r=num(x.rate??p?.purchase_price),g=num(x.gst??p?.gst);if(!p)throw Error('Product not found');if(q<=0)throw Error('Quantity must be greater than 0');const t=q*r*(1+g/100);total+=t;a.push({p,q,r,g,t})}const paid=Math.min(total,Math.max(0,num(b.paid))),no2=no||b.purchase_no||nextPurchaseNo();const tx=db.transaction(()=>{const r=db.prepare('INSERT INTO purchases(purchase_no,supplier_id,total,paid,status,notes) VALUES(?,?,?,?,?,?)').run(no2,b.supplier_id||null,total,paid,status(total,paid),b.notes||'');const id=r.lastInsertRowid,ii=db.prepare('INSERT INTO purchase_items(purchase_id,product_id,qty,rate,gst,total) VALUES(?,?,?,?,?,?)'),up=db.prepare('UPDATE products SET stock=stock+?,purchase_price=? WHERE id=?'),mv=db.prepare('INSERT INTO stock_movements(product_id,qty,kind,ref_id) VALUES(?,?,?,?)');for(const x of a){ii.run(id,x.p.id,x.q,x.r,x.g,x.t);up.run(x.q,x.r,x.p.id);mv.run(x.p.id,x.q,'PURCHASE',id)}return id});return {id:tx,purchase_no:no2,total,status:status(total,paid)}}
  const mw=app.use('/api',auth,(req,res,next)=>{try{const p=req.path;
   if(p==='/expenses'&&req.method==='GET')return res.json(db.prepare('SELECT * FROM expenses ORDER BY id DESC').all());
@@ -47,10 +93,36 @@ module.exports=function(app,db,auth,settings,nextNo,bcrypt){
   if(m&&req.method==='DELETE'){const x=db.prepare('SELECT * FROM purchases WHERE id=?').get(m[1]);if(!x)return res.status(404).json({error:'Purchase not found'});db.transaction(()=>{for(const z of db.prepare('SELECT * FROM purchase_items WHERE purchase_id=?').all(x.id)){db.prepare('UPDATE products SET stock=stock-? WHERE id=?').run(z.qty,z.product_id);db.prepare('INSERT INTO stock_movements(product_id,qty,kind,ref_id) VALUES(?,?,?,?)').run(z.product_id,-z.qty,'PURCHASE_DELETE',x.id)}db.prepare('DELETE FROM purchase_items WHERE purchase_id=?').run(x.id);db.prepare('DELETE FROM purchases WHERE id=?').run(x.id)})();return res.json({ok:true})}
   m=p.match(/^\/purchases\/(\d+)\/payment$/);if(m&&req.method==='POST'){const x=db.prepare('SELECT * FROM purchases WHERE id=?').get(m[1]),amt=num(req.body.amount);if(!x)return res.status(404).json({error:'Purchase not found'});if(amt<=0||amt>x.total-x.paid+.01)return res.status(400).json({error:'Invalid payment amount'});const paid=Math.min(x.total,x.paid+amt);db.prepare('UPDATE purchases SET paid=?,status=? WHERE id=?').run(paid,status(x.total,paid),x.id);db.prepare('INSERT INTO payments(customer_id,invoice_id,amount,mode,reference,note) VALUES(NULL,NULL,?,?,?,?)').run(amt,req.body.mode||'Cash',req.body.reference||'','Purchase payment '+x.id);return res.json({paid,status:status(x.total,paid)})}
   m=p.match(/^\/invoices\/(\d+)$/);if(m&&req.method==='DELETE'){const x=db.prepare('SELECT * FROM invoices WHERE id=?').get(m[1]);if(!x)return res.status(404).json({error:'Invoice not found'});db.transaction(()=>{for(const z of db.prepare('SELECT * FROM invoice_items WHERE invoice_id=?').all(x.id)){db.prepare('UPDATE products SET stock=stock+? WHERE id=?').run(z.qty,z.product_id);db.prepare('INSERT INTO stock_movements(product_id,qty,kind,ref_id) VALUES(?,?,?,?)').run(z.product_id,z.qty,'SALE_DELETE',x.id)}db.prepare('DELETE FROM payments WHERE invoice_id=?').run(x.id);db.prepare('DELETE FROM invoice_items WHERE invoice_id=?').run(x.id);db.prepare('DELETE FROM invoices WHERE id=?').run(x.id)})();return res.json({ok:true})}
-  if(m&&req.method==='PUT'){const x=db.prepare('SELECT * FROM invoices WHERE id=?').get(m[1]);if(!x)return res.status(404).json({error:'Invoice not found'});const old=db.prepare('SELECT * FROM invoice_items WHERE invoice_id=?').all(x.id);db.transaction(()=>{for(const z of old)db.prepare('UPDATE products SET stock=stock+? WHERE id=?').run(z.qty,z.product_id);db.prepare('DELETE FROM payments WHERE invoice_id=?').run(x.id);db.prepare('DELETE FROM invoice_items WHERE invoice_id=?').run(x.id);db.prepare('DELETE FROM invoices WHERE id=?').run(x.id)})();try{return res.json(createInvoice({...req.body,invoice_no:x.invoice_no},x.invoice_no))}catch(e){return res.status(400).json({error:e.message})}}
+  if(m&&req.method==='PUT'){
+    const x=db.prepare('SELECT * FROM invoices WHERE id=?').get(m[1]);
+    if(!x)return res.status(404).json({error:'Invoice not found'});
+    const old=db.prepare('SELECT * FROM invoice_items WHERE invoice_id=?').all(x.id);
+    const oldStock={};
+    for(const z of old)oldStock[z.product_id]=(oldStock[z.product_id]||0)+num(z.qty);
+    const items=req.body?.items||[];
+    if(!items.length)return res.status(400).json({error:'Add at least one item'});
+    for(const z of items){
+      const p=prod(z.product_id),q=num(z.qty);
+      if(!p)return res.status(400).json({error:'Product not found'});
+      if(q<=0)return res.status(400).json({error:'Quantity must be greater than 0'});
+      const available=num(p.stock)+(oldStock[p.id]||0);
+      if(q>available+.000001)return res.status(400).json({error:`Insufficient stock for ${p.name}. Available: ${available}`});
+    }
+    try{
+      db.transaction(()=>{
+        for(const z of old)db.prepare('UPDATE products SET stock=stock+? WHERE id=?').run(z.qty,z.product_id);
+        db.prepare('DELETE FROM payments WHERE invoice_id=?').run(x.id);
+        db.prepare('DELETE FROM invoice_items WHERE invoice_id=?').run(x.id);
+        db.prepare('DELETE FROM invoices WHERE id=?').run(x.id);
+      })();
+      return res.json(createInvoice({...req.body,invoice_no:x.invoice_no},x.invoice_no));
+    }catch(e){
+      return res.status(400).json({error:e.message||'Invoice update failed'});
+    }
+  }
   if(p==='/change-password'&&req.method==='POST'){const u=db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id),n=String(req.body.new_password||'');if(!u||!bcrypt.compareSync(req.body.current_password||'',u.password))return res.status(400).json({error:'Current password is incorrect'});if(n.length<8)return res.status(400).json({error:'New password must be at least 8 characters'});db.prepare('UPDATE users SET password=? WHERE id=?').run(bcrypt.hashSync(n,10),u.id);return res.json({ok:true})}
-  if(p==='/backup'&&req.method==='GET'){const t={settings:db.prepare('SELECT * FROM settings').all(),customers:db.prepare('SELECT * FROM customers').all(),suppliers:db.prepare('SELECT * FROM suppliers').all(),products:db.prepare('SELECT * FROM products').all(),invoices:db.prepare('SELECT * FROM invoices').all(),invoice_items:db.prepare('SELECT * FROM invoice_items').all(),purchases:db.prepare('SELECT * FROM purchases').all(),purchase_items:db.prepare('SELECT * FROM purchase_items').all(),payments:db.prepare('SELECT * FROM payments').all()};res.setHeader('Content-Disposition','attachment; filename="subha-billing-backup.json"');return res.json({version:1,created_at:new Date().toISOString(),tables:t})}
-  if(p==='/restore'&&req.method==='POST'){const t=req.body?.tables;if(!t)throw Error('Invalid backup file');db.transaction(()=>{db.exec('PRAGMA foreign_keys=OFF');for(const k of ['payments','invoice_items','purchase_items','invoices','purchases','products','customers','suppliers','settings'])db.prepare('DELETE FROM '+k).run();for(const x of t.settings||[])db.prepare('INSERT INTO settings(key,value) VALUES(?,?)').run(x.key,x.value);const q={customers:'INSERT INTO customers(id,name,phone,address,gstin,state,created_at) VALUES(@id,@name,@phone,@address,@gstin,@state,@created_at)',suppliers:'INSERT INTO suppliers(id,name,phone,address,gstin,state,created_at) VALUES(@id,@name,@phone,@address,@gstin,@state,@created_at)',products:'INSERT INTO products(id,name,sku,barcode,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock,created_at) VALUES(@id,@name,@sku,@barcode,@category,@unit,@hsn,@purchase_price,@sale_price,@gst,@stock,@min_stock,@created_at)',invoices:'INSERT INTO invoices(id,invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(@id,@invoice_no,@customer_id,@subtotal,@discount,@taxable,@cgst,@sgst,@igst,@roundoff,@total,@paid,@status,@payment_mode,@notes,@created_at)',invoice_items:'INSERT INTO invoice_items(id,invoice_id,product_id,name,qty,rate,gst,discount,taxable,tax,total) VALUES(@id,@invoice_id,@product_id,@name,@qty,@rate,@gst,@discount,@taxable,@tax,@total)',purchases:'INSERT INTO purchases(id,purchase_no,supplier_id,total,paid,status,notes,created_at) VALUES(@id,@purchase_no,@supplier_id,@total,@paid,@status,@notes,@created_at)',purchase_items:'INSERT INTO purchase_items(id,purchase_id,product_id,qty,rate,gst,total) VALUES(@id,@purchase_id,@product_id,@qty,@rate,@gst,@total)',payments:'INSERT INTO payments(id,customer_id,invoice_id,amount,mode,reference,note,created_at) VALUES(@id,@customer_id,@invoice_id,@amount,@mode,@reference,@note,@created_at)'};for(const [k,s] of Object.entries(q)){const st=db.prepare(s);for(const x of t[k]||[])st.run(x)}db.exec('PRAGMA foreign_keys=ON')})();return res.json({ok:true})}
+  if(p==='/backup'&&req.method==='GET'){const t={settings:db.prepare('SELECT * FROM settings').all(),customers:db.prepare('SELECT * FROM customers').all(),suppliers:db.prepare('SELECT * FROM suppliers').all(),products:db.prepare('SELECT * FROM products').all(),invoices:db.prepare('SELECT * FROM invoices').all(),invoice_items:db.prepare('SELECT * FROM invoice_items').all(),purchases:db.prepare('SELECT * FROM purchases').all(),purchase_items:db.prepare('SELECT * FROM purchase_items').all(),payments:db.prepare('SELECT * FROM payments').all(),expenses:db.prepare('SELECT * FROM expenses').all(),stock_movements:db.prepare('SELECT * FROM stock_movements').all()};res.setHeader('Content-Disposition','attachment; filename="subha-billing-backup.json"');return res.json({version:1,created_at:new Date().toISOString(),tables:t})}
+  if(p==='/restore'&&req.method==='POST'){const t=req.body?.tables;if(!t)throw Error('Invalid backup file');db.transaction(()=>{db.exec('PRAGMA foreign_keys=OFF');for(const k of ['payments','stock_movements','expenses','invoice_items','purchase_items','invoices','purchases','products','customers','suppliers','settings'])db.prepare('DELETE FROM '+k).run();for(const x of t.settings||[])db.prepare('INSERT INTO settings(key,value) VALUES(?,?)').run(x.key,x.value);const q={customers:'INSERT INTO customers(id,name,phone,address,gstin,state,created_at) VALUES(@id,@name,@phone,@address,@gstin,@state,@created_at)',suppliers:'INSERT INTO suppliers(id,name,phone,address,gstin,state,created_at) VALUES(@id,@name,@phone,@address,@gstin,@state,@created_at)',products:'INSERT INTO products(id,name,sku,barcode,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock,created_at) VALUES(@id,@name,@sku,@barcode,@category,@unit,@hsn,@purchase_price,@sale_price,@gst,@stock,@min_stock,@created_at)',invoices:'INSERT INTO invoices(id,invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(@id,@invoice_no,@customer_id,@subtotal,@discount,@taxable,@cgst,@sgst,@igst,@roundoff,@total,@paid,@status,@payment_mode,@notes,@created_at)',invoice_items:'INSERT INTO invoice_items(id,invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(@id,@invoice_id,@product_id,@name,@qty,@rate,@gst,@gst_mode,@discount,@taxable,@tax,@total)',purchases:'INSERT INTO purchases(id,purchase_no,supplier_id,total,paid,status,notes,created_at) VALUES(@id,@purchase_no,@supplier_id,@total,@paid,@status,@notes,@created_at)',purchase_items:'INSERT INTO purchase_items(id,purchase_id,product_id,qty,rate,gst,total) VALUES(@id,@purchase_id,@product_id,@qty,@rate,@gst,@total)',payments:'INSERT INTO payments(id,customer_id,invoice_id,amount,mode,reference,note,created_at) VALUES(@id,@customer_id,@invoice_id,@amount,@mode,@reference,@note,@created_at)',expenses:'INSERT INTO expenses(id,date,category,description,amount,mode,reference,note) VALUES(@id,@date,@category,@description,@amount,@mode,@reference,@note)',stock_movements:'INSERT INTO stock_movements(id,product_id,qty,kind,ref_id,created_at) VALUES(@id,@product_id,@qty,@kind,@ref_id,@created_at)'};for(const [k,s] of Object.entries(q)){const st=db.prepare(s);for(const x of t[k]||[]){if(k==='invoice_items')st.run({...x,gst_mode:x.gst_mode||'EXCLUDING'});else st.run(x)}}db.exec('PRAGMA foreign_keys=ON')})();return res.json({ok:true})}
   if(p==='/export/gst.csv'&&req.method==='GET'){const a=db.prepare("SELECT substr(created_at,1,10) date,ROUND(SUM(taxable),2) taxable,ROUND(SUM(cgst),2) cgst,ROUND(SUM(sgst),2) sgst,ROUND(SUM(igst),2) igst,ROUND(SUM(total),2) total FROM invoices WHERE status!='Cancelled' GROUP BY date ORDER BY date DESC").all(),e=v=>'"'+String(v??'').replaceAll('"','""')+'"',csv=['Date,Taxable,CGST,SGST,IGST,Total',...a.map(x=>[x.date,x.taxable,x.cgst,x.sgst,x.igst,x.total].map(e).join(','))].join('\n');res.setHeader('Content-Type','text/csv');res.setHeader('Content-Disposition','attachment; filename="subha-billing-gst.csv"');return res.send(csv)}
   if(p==='/export/purchases.csv'&&req.method==='GET'){const a=db.prepare('SELECT p.purchase_no,p.created_at,COALESCE(s.name,"Walk-in Supplier") supplier,p.total,p.paid,p.status FROM purchases p LEFT JOIN suppliers s ON s.id=p.supplier_id ORDER BY p.id DESC').all(),e=v=>'"'+String(v??'').replaceAll('"','""')+'"',csv=['Purchase No,Date,Supplier,Total,Paid,Status',...a.map(x=>[x.purchase_no,x.created_at,x.supplier,x.total,x.paid,x.status].map(e).join(','))].join('\n');res.setHeader('Content-Type','text/csv');res.setHeader('Content-Disposition','attachment; filename="subha-billing-purchases.csv"');return res.send(csv)}
   next()
