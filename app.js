@@ -2194,7 +2194,16 @@ async function ledger(){
   const customers=await api('/customers');
   $('#content').innerHTML=header('Customer Ledger')+`<div class="panel"><div class="field"><label>Select Customer</label><select id="ledgerCustomer" onchange="loadLedger(this.value)"><option value="">Select customer</option>${customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div id="ledgerTable" class="tablewrap"><div class="muted">Select a customer to view ledger.</div></div></div>`;
 }
-async function loadLedger(id){if(!id)return;const rows=await api('/ledger?type=customer&id='+id);$('#ledgerTable').innerHTML=`<table class="table"><thead><tr><th>Date</th><th>Reference</th><th>Type</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.date}</td><td>${x.ref}</td><td>${x.kind}</td><td>${money(x.debit)}</td><td>${money(x.credit)}</td><td>${money(x.balance)}</td></tr>`).join('')}</tbody></table>`;}
+async function loadLedger(id){
+  if(!id)return;
+  const rows=await api('/ledger?type=customer&id='+id);
+  let running=0;
+  const body=rows.map(x=>{
+    running+=Number(x.debit||0)-Number(x.credit||0);
+    return `<tr><td>${x.date}</td><td>${x.ref}</td><td>${x.kind}</td><td>${money(x.debit)}</td><td>${money(x.credit)}</td><td>${money(running)}</td></tr>`;
+  }).join('');
+  $('#ledgerTable').innerHTML=`<table class="table"><thead><tr><th>Date</th><th>Reference</th><th>Type</th><th>Debit</th><th>Credit</th><th>Running Balance</th></tr></thead><tbody>${body||'<tr><td colspan="6" class="muted">No transactions.</td></tr>'}</tbody></table>`;
+}
 
 async function stockMovements(){
   const rows=await api('/stock-movements');
