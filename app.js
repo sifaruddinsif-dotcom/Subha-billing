@@ -2235,12 +2235,10 @@ function downloadCSV(){
 ========================= */
 
 function globalSearch(v){
-
-  /*
-    Global search hook.
-    Existing API/pages remain unchanged.
-  */
-
+  const q=String(v||'').trim().toLowerCase();
+  $('.table tbody tr').forEach(row=>{
+    row.style.display=!q||row.textContent.toLowerCase().includes(q)?'':'none';
+  });
 }
 
 /* =========================
