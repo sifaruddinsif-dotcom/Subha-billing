@@ -1565,3 +1565,53 @@ button{
     max-height:34mm!important;
   }
 }
+
+
+/* PM ENTERPRISE invoice logo */
+.invoice-print.tally-invoice .pm-logo{
+  width:100%;
+  text-align:center;
+  color:#173b72;
+  padding-top:3px;
+}
+.invoice-print.tally-invoice .pm-logo-ring{
+  width:56px;
+  height:56px;
+  margin:0 auto 4px;
+  border:3px solid #173b72;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.invoice-print.tally-invoice .pm-logo-ring:before,
+.invoice-print.tally-invoice .pm-logo-ring:after{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border:1px solid #173b72;
+  border-radius:50%;
+}
+.invoice-print.tally-invoice .pm-logo-ring:after{
+  inset:10px;
+}
+.invoice-print.tally-invoice .pm-logo-ring span{
+  position:relative;
+  z-index:1;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+.invoice-print.tally-invoice .pm-logo-name{
+  font-size:7.5px;
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:.5px;
+}
+@media print{
+  .invoice-print.tally-invoice .pm-logo-ring{
+    width:52px;
+    height:52px;
+  }
+}
