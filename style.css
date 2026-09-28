@@ -1615,3 +1615,82 @@ button{
     height:52px;
   }
 }
+
+
+/* FINAL MOBILE PDF PREVIEW FIX
+   Show the invoice and its print ancestors using display instead of
+   visibility-only printing. This prevents a blank Android Chrome print preview.
+*/
+@media print{
+  html,body{
+    visibility:visible!important;
+    background:#fff!important;
+    overflow:hidden!important;
+  }
+
+  body > *{
+    display:none!important;
+  }
+
+  .modal,
+  .modal.open{
+    display:block!important;
+    visibility:visible!important;
+    position:static!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+    overflow:visible!important;
+  }
+
+  .modalbox{
+    display:block!important;
+    visibility:visible!important;
+    position:static!important;
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+    border:0!important;
+    border-radius:0!important;
+    overflow:visible!important;
+  }
+
+  .modalbox > *{
+    visibility:visible!important;
+  }
+
+  .invoice-print.tally-invoice{
+    display:block!important;
+    visibility:visible!important;
+    position:relative!important;
+    width:190mm!important;
+    height:287mm!important;
+    min-height:287mm!important;
+    max-height:287mm!important;
+    margin:0 auto!important;
+    padding:0!important;
+    overflow:hidden!important;
+    background:#fff!important;
+    color:#111!important;
+    opacity:1!important;
+  }
+
+  .invoice-print.tally-invoice *{
+    display:revert;
+    visibility:visible!important;
+    opacity:1!important;
+  }
+
+  .invoice-print.tally-invoice .no-print,
+  .modalbox > .toolbar.no-print{
+    display:none!important;
+  }
+}
