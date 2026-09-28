@@ -1,0 +1,21 @@
+name: Build SUBHA BILLING Offline ZIP
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create ZIP
+        run: |
+          zip -r SUBHA_BILLING_OFFLINE.zip . -x ".git/*" ".github/*" "node_modules/*" "*.db"
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: SUBHA_BILLING_OFFLINE
+          path: SUBHA_BILLING_OFFLINE.zip
+          retention-days: 30
