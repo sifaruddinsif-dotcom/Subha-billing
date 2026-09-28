@@ -56,6 +56,7 @@ app.get('/api/reports/sales',auth,(req,res)=>{const from=req.query.from||'2000-0
 app.get('/api/reports/gst',auth,(req,res)=>res.json(db.prepare("SELECT substr(created_at,1,10) date,ROUND(SUM(taxable),2) taxable,ROUND(SUM(cgst),2) cgst,ROUND(SUM(sgst),2) sgst,ROUND(SUM(igst),2) igst,ROUND(SUM(total),2) total FROM invoices GROUP BY date ORDER BY date DESC").all()));
 app.get('/api/export/invoices.csv',auth,(req,res)=>{const rows=db.prepare('SELECT invoice_no,created_at,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode FROM invoices ORDER BY id DESC').all();const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';const csv=[Object.keys(rows[0]||{invoice_no:1}).join(','),...rows.map(r=>Object.values(r).map(esc).join(','))].join('\n');res.setHeader('Content-Type','text/csv');res.setHeader('Content-Disposition','attachment; filename="subha-billing-invoices.csv"');res.send(csv)});
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(PORT,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
+const HOST=process.env.HOST||'0.0.0.0';
+app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
 
 require('./server-enhancements')(app,db,auth,settings,nextNo,bcrypt);
