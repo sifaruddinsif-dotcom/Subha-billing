@@ -1,0 +1,1696 @@
+*{
+  box-sizing:border-box
+}
+
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;
+  background:#070707;
+  color:#f5f5f5
+}
+
+button,input,select,textarea{
+  font:inherit
+}
+
+button{
+  cursor:pointer
+}
+
+.hidden{
+  display:none
+}
+
+.login{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  background:radial-gradient(circle at 50% 20%,#302000,#070707 55%)
+}
+
+.loginbox{
+  width:min(430px,92vw);
+  background:#0e0e0e;
+  border:1px solid #4d3a0d;
+  border-radius:22px;
+  padding:34px;
+  box-shadow:0 20px 70px #000
+}
+
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center
+}
+
+.brandmark{
+  width:44px;
+  height:44px;
+  border:1px solid #d7a927;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  color:#ffd54d;
+  font-size:22px
+}
+
+.brand h1{
+  margin:0;
+  font-size:22px
+}
+
+.muted{
+  color:#aaa
+}
+
+.field{
+  margin:14px 0
+}
+
+.field label{
+  display:block;
+  color:#aaa;
+  font-size:12px;
+  margin-bottom:6px
+}
+
+.field input,
+.field select,
+.field textarea{
+  width:100%;
+  background:#121212;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:10px;
+  padding:11px;
+  outline:none
+}
+
+.btn{
+  border:1px solid #5c460d;
+  background:#17120a;
+  color:#ffd54d;
+  padding:10px 15px;
+  border-radius:10px
+}
+
+.btn.primary{
+  background:linear-gradient(135deg,#ffd34e,#9b6900);
+  color:#090909;
+  border:0;
+  font-weight:700
+}
+
+.btn.danger{
+  color:#ff7b7b;
+  border-color:#4d1d1d
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:245px 1fr;
+  min-height:100vh
+}
+
+.side{
+  background:#050505;
+  border-right:1px solid #27200e;
+  padding:18px;
+  position:sticky;
+  top:0;
+  height:100vh
+}
+
+.side .brand{
+  margin-bottom:25px
+}
+
+.nav button{
+  display:block;
+  width:100%;
+  text-align:left;
+  background:none;
+  color:#ddd;
+  border:0;
+  padding:12px 10px;
+  border-radius:9px;
+  margin:3px 0
+}
+
+.nav button:hover,
+.nav button.active{
+  background:#2b210b;
+  color:#ffd34e
+}
+
+.sidefoot{
+  position:absolute;
+  bottom:18px;
+  left:18px;
+  right:18px;
+  border:1px solid #4a390f;
+  border-radius:12px;
+  padding:12px
+}
+
+.main{
+  padding:22px;
+  overflow:auto
+}
+
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  margin-bottom:20px
+}
+
+.search{
+  flex:1;
+  max-width:540px;
+  background:#0d0d0d;
+  border:1px solid #303030;
+  color:#fff;
+  padding:12px 15px;
+  border-radius:11px
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:12px
+}
+
+.card{
+  background:#0d0d0d;
+  border:1px solid #292929;
+  border-radius:15px;
+  padding:17px
+}
+
+.card.gold{
+  border-color:#4d3b10
+}
+
+.card .label{
+  font-size:12px;
+  color:#aaa
+}
+
+.card .value{
+  font-size:24px;
+  font-weight:750;
+  margin-top:8px
+}
+
+.grid2{
+  display:grid;
+  grid-template-columns:1.6fr 1fr;
+  gap:14px;
+  margin-top:14px
+}
+
+.grid3{
+  display:grid;
+  grid-template-columns:1.2fr 1fr 1fr;
+  gap:14px;
+  margin-top:14px
+}
+
+.panel{
+  background:#0d0d0d;
+  border:1px solid #292929;
+  border-radius:15px;
+  padding:17px
+}
+
+.panel h3{
+  margin:0 0 14px
+}
+
+.quick{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px
+}
+
+.quick button{
+  background:#111;
+  border:1px solid #3b2d0b;
+  color:#f4d06a;
+  padding:16px 8px;
+  border-radius:12px
+}
+
+.listrow{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid #242424
+}
+
+.status{
+  font-size:11px;
+  padding:4px 7px;
+  border-radius:99px
+}
+
+.paid{
+  background:#0b3522;
+  color:#6dffa8
+}
+
+.partial{
+  background:#382a0a;
+  color:#ffd35b
+}
+
+.pending{
+  background:#3b1212;
+  color:#ff8a8a
+}
+
+.low{
+  color:#ff7777
+}
+
+.tablewrap{
+  overflow:auto
+}
+
+.table{
+  width:100%;
+  border-collapse:collapse
+}
+
+.table th,
+.table td{
+  text-align:left;
+  padding:10px;
+  border-bottom:1px solid #242424;
+  white-space:nowrap
+}
+
+.table th{
+  color:#aaa;
+  font-size:12px
+}
+
+.actions{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap
+}
+
+.toolbar{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:15px
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:#000b;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:10
+}
+
+.modal.open{
+  display:flex
+}
+
+.modalbox{
+  background:#101010;
+  border:1px solid #4b390e;
+  border-radius:17px;
+  padding:20px;
+  width:min(800px,96vw);
+  max-height:92vh;
+  overflow:auto
+}
+
+.formgrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px
+}
+
+.invoice-items{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px
+}
+
+.invoice-items th,
+.invoice-items td{
+  padding:7px;
+  border-bottom:1px solid #282828
+}
+
+.invoice-items input,
+.invoice-items select{
+  background:#151515;
+  border:1px solid #333;
+  color:#fff;
+  padding:8px;
+  border-radius:7px;
+  width:100%
+}
+
+.totals{
+  margin-left:auto;
+  width:320px;
+  max-width:100%;
+  margin-top:14px
+}
+
+.totalrow{
+  display:flex;
+  justify-content:space-between;
+  padding:6px
+}
+
+.totalrow.big{
+  font-size:19px;
+  font-weight:800;
+  border-top:1px solid #555;
+  margin-top:5px;
+  padding-top:10px;
+  color:#ffd34e
+}
+
+.chart{
+  height:220px;
+  display:flex;
+  align-items:end;
+  gap:10px;
+  padding:20px 8px 0
+}
+
+.bar{
+  flex:1;
+  background:linear-gradient(#d9a522,#5a4107);
+  border-radius:6px 6px 0 0;
+  min-height:4px;
+  position:relative
+}
+
+.bar span{
+  position:absolute;
+  bottom:-20px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:9px;
+  color:#888
+}
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:#181818;
+  border:1px solid #57450f;
+  padding:12px 16px;
+  border-radius:10px;
+  display:none;
+  z-index:30
+}
+
+.toast.show{
+  display:block
+}
+
+/* =========================================
+   SUBHA BILLING - TALLY ERP 9 INVOICE
+========================================= */
+
+.invoice-print{
+  background:#fff!important;
+  color:#111!important;
+  width:210mm;
+  min-height:297mm;
+  margin:0 auto;
+  padding:6mm;
+  box-sizing:border-box;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:10px;
+  line-height:1.35
+}
+
+.invoice-print *{
+  box-sizing:border-box
+}
+
+.tally-invoice{
+  width:100%;
+  max-width:190mm;
+  margin:0 auto;
+  background:#fff;
+  color:#111;
+  border:1px solid #111;
+  padding:6mm
+}
+
+.tally-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:15px;
+  border-bottom:2px solid #111;
+  padding-bottom:7px
+}
+
+.tally-header h1{
+  margin:0 0 3px;
+  font-size:22px
+}
+
+.invoice-heading{
+  text-align:right;
+  min-width:150px
+}
+
+.invoice-heading h2{
+  margin:0 0 5px;
+  font-size:18px
+}
+
+.invoice-info{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  border-bottom:1px solid #111
+}
+
+.invoice-info>div{
+  padding:6px;
+  border-right:1px solid #111
+}
+
+.invoice-info>div:last-child{
+  border-right:0
+}
+
+.bill-section{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border-bottom:1px solid #111
+}
+
+.bill-section>div{
+  padding:7px;
+  min-height:75px;
+  border-right:1px solid #111
+}
+
+.bill-section>div:last-child{
+  border-right:0
+}
+
+.tally-invoice h4{
+  margin:0 0 5px;
+  font-size:10px
+}
+
+.tally-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed
+}
+
+.tally-table th,
+.tally-table td{
+  border:1px solid #111;
+  padding:4px;
+  vertical-align:top;
+  word-break:break-word
+}
+
+.tally-table th{
+  background:#f2f2f2;
+  text-align:center;
+  font-size:8.5px
+}
+
+.tally-table td{
+  font-size:9px
+}
+
+.tally-table th:nth-child(1){width:4%}
+.tally-table th:nth-child(2){width:19%}
+.tally-table th:nth-child(3){width:8%}
+.tally-table th:nth-child(4){width:5%}
+.tally-table th:nth-child(5){width:5%}
+.tally-table th:nth-child(6){width:8%}
+.tally-table th:nth-child(7){width:6%}
+.tally-table th:nth-child(8){width:10%}
+.tally-table th:nth-child(9),
+.tally-table th:nth-child(10),
+.tally-table th:nth-child(11){width:7%}
+.tally-table th:nth-child(12){width:11%}
+
+.invoice-footer-grid{
+  display:grid;
+  grid-template-columns:1fr 38%;
+  border:1px solid #111;
+  border-top:0
+}
+
+.invoice-footer-grid>div{
+  padding:7px
+}
+
+.invoice-totals{
+  border-left:1px solid #111
+}
+
+.invoice-totals>div{
+  display:flex;
+  justify-content:space-between;
+  padding:3px 0;
+  border-bottom:1px dotted #777
+}
+
+.invoice-totals .grand-total{
+  font-size:12px;
+  font-weight:bold;
+  border:1px solid #111;
+  padding:7px;
+  margin-top:5px
+}
+
+.signature-section{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:25%;
+  margin-top:30px
+}
+
+.signature-section>div{
+  text-align:center
+}
+
+.signature-line{
+  border-top:1px solid #111;
+  margin-top:35px;
+  padding-top:4px
+}
+
+.computer-generated{
+  text-align:center;
+  border-top:1px solid #111;
+  margin-top:12px;
+  padding-top:5px;
+  font-size:9px
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media(max-width:1100px){
+
+  .cards{
+    grid-template-columns:repeat(3,1fr)
+  }
+
+  .grid3{
+    grid-template-columns:1fr
+  }
+
+  .grid2{
+    grid-template-columns:1fr
+  }
+}
+
+@media(max-width:720px){
+
+  .layout{
+    grid-template-columns:1fr
+  }
+
+  .side{
+    position:static;
+    height:auto
+  }
+
+  .nav{
+    display:grid;
+    grid-template-columns:repeat(2,1fr)
+  }
+
+  .sidefoot{
+    position:static;
+    margin-top:12px
+  }
+
+  .cards{
+    grid-template-columns:1fr 1fr
+  }
+
+  .quick{
+    grid-template-columns:1fr 1fr
+  }
+
+  .formgrid{
+    grid-template-columns:1fr
+  }
+
+  .main{
+    padding:12px
+  }
+
+  .top{
+    flex-wrap:wrap
+  }
+
+  .search{
+    max-width:none;
+    order:2;
+    flex-basis:100%
+  }
+
+  .invoice-print{
+    width:100%;
+    min-height:auto;
+    padding:4mm;
+    overflow-x:auto
+  }
+
+  .tally-invoice{
+    min-width:0;
+    padding:4mm
+  }
+
+  .tally-header{
+    display:block;
+    text-align:center
+  }
+
+  .invoice-heading{
+    text-align:center;
+    margin-top:8px
+  }
+
+  .invoice-info{
+    grid-template-columns:repeat(2,1fr)
+  }
+
+  .invoice-info>div:nth-child(2){
+    border-right:0
+  }
+
+  .bill-section{
+    grid-template-columns:1fr
+  }
+
+  .bill-section>div{
+    border-right:0;
+    border-bottom:1px solid #111
+  }
+
+  .invoice-footer-grid{
+    grid-template-columns:1fr
+  }
+
+  .invoice-totals{
+    border-left:0;
+    border-top:1px solid #111
+  }
+
+  .signature-section{
+    grid-template-columns:1fr;
+    gap:30px
+  }
+
+  .tally-table{
+    min-width:900px
+  }
+}
+
+/* =========================================
+   PRINT / A4
+========================================= */
+
+@media print{
+
+  @page{
+    size:A4 portrait;
+    margin:7mm
+  }
+
+  html,
+  body{
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+    color:#000!important
+  }
+
+  body *{
+    visibility:hidden
+  }
+
+  .invoice-print,
+  .invoice-print *{
+    visibility:visible
+  }
+
+  .invoice-print{
+    position:absolute;
+    left:0;
+    top:0;
+    width:190mm;
+    min-height:283mm;
+    margin:0;
+    padding:0;
+    background:#fff!important
+  }
+
+  .no-print{
+    display:none!important
+  }
+
+  .tally-invoice{
+    width:190mm;
+    max-width:190mm;
+    margin:0;
+    border:1px solid #111
+  }
+}
+
+/* =========================================
+   SUBHA BILLING
+   FINAL TALLY ERP 9 A4 INVOICE
+========================================= */
+
+.invoice-print{
+  background:#fff!important;
+  color:#111!important;
+  width:210mm;
+  min-height:297mm;
+  margin:0 auto;
+  padding:6mm;
+  box-sizing:border-box;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:10px;
+  line-height:1.35;
+}
+
+.invoice-print *{
+  box-sizing:border-box;
+}
+
+.tally-invoice{
+  width:190mm;
+  margin:0 auto;
+  background:#fff;
+  color:#111;
+  border:1px solid #111;
+}
+
+.tally-top{
+  display:grid;
+  grid-template-columns:46% 25% 29%;
+  min-height:72mm;
+  border-bottom:1px solid #111;
+}
+
+.tally-company{
+  display:flex;
+  gap:10px;
+  padding:6px;
+}
+
+.company-logo{
+  width:82px;
+  text-align:center;
+  flex:none;
+}
+
+.logo-mark{
+  font-size:34px;
+  font-weight:900;
+  color:#173b72;
+  line-height:34px;
+}
+
+.logo-name{
+  font-size:19px;
+  font-weight:800;
+  color:#173b72;
+}
+
+.logo-billing{
+  font-size:15px;
+  font-weight:800;
+  color:#c62828;
+  letter-spacing:1px;
+}
+
+.company-details{
+  font-size:10px;
+  line-height:1.55;
+}
+
+.company-name{
+  font-size:18px;
+  font-weight:800;
+  color:#173b72;
+  margin-bottom:4px;
+}
+
+.tax-title{
+  text-align:center;
+  padding:13px 5px;
+}
+
+.tax-title h1{
+  font-size:19px;
+  margin:0 0 5px;
+}
+
+.invoice-meta{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border-left:1px solid #111;
+}
+
+/* COMPACT TALLY-STYLE INVOICE META */
+.invoice-meta>div{
+  min-height:10mm;
+  padding:3.5px 5px;
+  border-bottom:1px solid #111;
+  border-right:1px solid #111;
+  overflow:hidden;
+}
+
+.invoice-meta span{
+  display:block;
+  font-size:8.5px;
+  line-height:1.15;
+  margin-bottom:2px;
+}
+
+.invoice-meta b{
+  display:block;
+  font-size:8.5px;
+  line-height:1.2;
+  overflow-wrap:anywhere;
+}
+
+.invoice-meta .meta-wide{
+  grid-column:1 / 3;
+  min-height:9mm;
+}
+
+.bill-to-box{
+  min-height:39mm;
+  border-bottom:1px solid #111;
+}
+
+.bill-to-box>div{
+  width:50%;
+  min-height:39mm;
+  padding:7px;
+  border-right:1px solid #111;
+}
+
+.section-label{
+  font-weight:700;
+  margin-bottom:5px;
+}
+
+.tally-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+.tally-table th,
+.tally-table td{
+  border:1px solid #111;
+  padding:4px;
+  vertical-align:top;
+  word-break:break-word;
+}
+
+.tally-table th{
+  text-align:center;
+  background:#edf1f5;
+  font-size:8.5px;
+}
+
+.tally-table td{
+  font-size:9px;
+}
+
+.tally-items th:nth-child(1){width:4%}
+.tally-items th:nth-child(2){width:20%}
+.tally-items th:nth-child(3){width:7%}
+.tally-items th:nth-child(4){width:5%}
+.tally-items th:nth-child(5){width:5%}
+.tally-items th:nth-child(6){width:8%}
+.tally-items th:nth-child(7){width:5%}
+.tally-items th:nth-child(8){width:10%}
+.tally-items th:nth-child(9){width:5%}
+.tally-items th:nth-child(10){width:7%}
+.tally-items th:nth-child(11){width:5%}
+.tally-items th:nth-child(12){width:7%}
+.tally-items th:nth-child(13){width:12%}
+
+.center{
+  text-align:center;
+}
+
+.right{
+  text-align:right;
+}
+
+.amount-total-row{
+  display:grid;
+  grid-template-columns:65% 35%;
+  border-bottom:1px solid #111;
+}
+
+.amount-words{
+  min-height:32mm;
+  padding:8px;
+  border-right:1px solid #111;
+}
+
+.summary-total{
+  padding:0;
+}
+
+.summary-total>div{
+  display:flex;
+  justify-content:space-between;
+  padding:4px 7px;
+  border-bottom:1px solid #bbb;
+}
+
+.grand-total-row{
+  font-size:14px;
+  font-weight:800;
+  border:1px solid #111!important;
+  margin:5px;
+}
+
+.eoe{
+  justify-content:flex-end!important;
+  border:0!important;
+  font-size:8px;
+}
+
+.bottom-three{
+  display:grid;
+  grid-template-columns:34% 34% 32%;
+  min-height:39mm;
+  border-bottom:1px solid #111;
+}
+
+.bottom-three>div{
+  padding:8px;
+  border-right:1px solid #111;
+}
+
+.bottom-three>div:last-child{
+  border-right:0;
+}
+
+.bank-box,
+.terms-box{
+  line-height:1.6;
+}
+
+.authorised-box{
+  text-align:center;
+}
+
+.seal{
+  width:55px;
+  height:55px;
+  border:2px solid #173b72;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  margin:8px auto;
+  color:#173b72;
+  font-size:20px;
+  font-weight:800;
+}
+
+.sign-line{
+  width:75%;
+  border-top:1px dotted #111;
+  margin:10px auto 4px;
+}
+
+.declaration-row{
+  display:grid;
+  grid-template-columns:50% 50%;
+  min-height:24mm;
+  border-bottom:1px solid #111;
+}
+
+.declaration-row>div{
+  padding:8px;
+  border-right:1px solid #111;
+  line-height:1.5;
+}
+
+.dotted-sign{
+  border-bottom:1px dotted #111;
+  margin-top:17px;
+}
+
+.computer-generated{
+  text-align:center;
+  padding:5px;
+  font-size:9px;
+  font-style:italic;
+}
+
+
+/* MOBILE */
+
+@media(max-width:720px){
+
+  .invoice-print{
+    width:100%;
+    min-height:auto;
+    padding:4mm;
+    overflow-x:auto;
+  }
+
+  .tally-invoice{
+    min-width:0;
+  }
+
+  .tally-top{
+    grid-template-columns:1fr;
+  }
+
+  .tax-title{
+    border-top:1px solid #111;
+    border-bottom:1px solid #111;
+  }
+
+  .invoice-meta{
+    border-left:0;
+  }
+
+  .bill-to-box>div{
+    width:100%;
+  }
+
+  .amount-total-row{
+    grid-template-columns:1fr;
+  }
+
+  .amount-words{
+    border-right:0;
+    border-bottom:1px solid #111;
+  }
+
+  .bottom-three{
+    grid-template-columns:1fr;
+  }
+
+  .bottom-three>div{
+    border-right:0;
+    border-bottom:1px solid #111;
+  }
+
+  .tally-items{
+    min-width:900px;
+  }
+
+}
+
+
+/* A4 PRINT */
+
+@media print{
+
+  @page{
+    size:A4 portrait;
+    margin:5mm;
+  }
+
+  html,
+  body{
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+    color:#000!important;
+  }
+
+  body *{
+    visibility:hidden;
+  }
+
+  .invoice-print,
+  .invoice-print *{
+    visibility:visible;
+  }
+
+  .invoice-print{
+    position:absolute;
+    left:0;
+    top:0;
+    width:190mm;
+    min-height:287mm;
+    margin:0;
+    padding:0;
+    background:#fff!important;
+  }
+
+  .no-print{
+    display:none!important;
+  }
+
+  .tally-invoice{
+    width:190mm;
+    margin:0;
+    border:1px solid #111;
+  }
+
+}
+
+/* FINAL INVOICE TABLE — CLEAN TALLY ERP 9 LAYOUT */
+.tally-items{
+  width:100%;
+  table-layout:fixed;
+}
+.tally-items col:nth-child(1){width:4%}
+.tally-items col:nth-child(2){width:22%}
+.tally-items col:nth-child(3){width:7%}
+.tally-items col:nth-child(4){width:5%}
+.tally-items col:nth-child(5){width:5%}
+.tally-items col:nth-child(6){width:8%}
+.tally-items col:nth-child(7){width:5%}
+.tally-items col:nth-child(8){width:10%}
+.tally-items col:nth-child(9),
+.tally-items col:nth-child(10),
+.tally-items col:nth-child(11),
+.tally-items col:nth-child(12){width:6%}
+.tally-items col:nth-child(13){width:10%}
+.tally-items th,
+.tally-items td{
+  padding:3px 2px;
+  vertical-align:middle;
+  word-break:normal;
+}
+.tally-items th{
+  font-size:7.2px;
+  line-height:1.15;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  text-align:center;
+}
+.tally-items td{
+  font-size:8px;
+  line-height:1.2;
+}
+.tally-items th:nth-child(1){width:4%}
+.tally-items th:nth-child(2){width:21%}
+.tally-items th:nth-child(3){width:7%}
+.tally-items th:nth-child(4){width:5%}
+.tally-items th:nth-child(5){width:5%}
+.tally-items th:nth-child(6){width:8%}
+.tally-items th:nth-child(7){width:5%}
+.tally-items th:nth-child(8){width:10%}
+.tally-items th:nth-child(9){width:6%}
+.tally-items th:nth-child(10){width:6%}
+.tally-items th:nth-child(11){width:6%}
+.tally-items th:nth-child(12){width:6%}
+.tally-items th:nth-child(13){width:11%}
+
+.tally-items th:nth-child(9),
+.tally-items th:nth-child(10),
+.tally-items th:nth-child(11),
+.tally-items th:nth-child(12){
+  font-size:7px;
+  white-space:nowrap;
+  word-break:normal;
+  overflow-wrap:normal;
+}
+
+@media print{
+  .tally-items th,
+  .tally-items td{
+    padding:2.5px 2px;
+  }
+  .tally-items th{
+    font-size:7px;
+  }
+  .tally-items td{
+    font-size:7.8px;
+  }
+}
+
+/* FINAL MASTER REFERENCE A4 TALLY ERP 9 INVOICE */
+.invoice-print.tally-invoice{width:190mm!important;margin:0 auto!important;background:#fff!important;color:#111!important;border:1px solid #111!important;font-family:Arial,Helvetica,sans-serif!important;font-size:10px!important;line-height:1.25!important}
+.invoice-print.tally-invoice *{box-sizing:border-box}
+.tally-top{display:grid!important;grid-template-columns:66% 34%!important;border-bottom:1px solid #111!important}
+.tally-left{border-right:1px solid #111!important;min-width:0}
+.company-tax-row{display:grid!important;grid-template-columns:22% 46% 32%!important;min-height:35mm!important;border-bottom:1px solid #111!important}
+.brand-box{text-align:center;padding:5px 2px}
+.s3-logo{font-size:38px;font-weight:900;line-height:38px;color:#173b72}
+.subha-word{font-size:20px;font-weight:800;color:#173b72;line-height:22px}
+.billing-word{font-size:14px;font-weight:800;color:#c62828;letter-spacing:1.4px}
+.company-details{padding:6px 5px;font-size:8.8px;line-height:1.55;overflow-wrap:anywhere}
+.company-name{font-size:15px!important;font-weight:800;color:#173b72;margin-bottom:3px}
+.tax-title{text-align:center;padding:8px 2px}
+.tax-title h1{font-size:18px!important;margin:3px 0 3px!important;font-weight:800}
+.tax-title em{font-size:9px}
+.invoice-meta{display:grid!important;grid-template-columns:1fr 1fr!important}
+.invoice-meta>div{min-height:7.7mm!important;padding:3px 4px!important;border-bottom:1px solid #111!important;border-right:1px solid #111!important;overflow:hidden!important}
+.invoice-meta span{display:block;font-size:7.6px!important;line-height:1.1!important;margin-bottom:1px!important}
+.invoice-meta b{display:block;font-size:8px!important;line-height:1.15!important;overflow-wrap:anywhere}
+.invoice-meta .meta-wide{grid-column:1/3;min-height:7.5mm!important}
+.bill-to-box{min-height:42mm!important;padding:6px 7px!important}
+.bill-to-box .bill-title{font-size:8px;font-weight:700;margin-bottom:3px}
+.bill-to-box b{font-size:10px}
+.bill-to-box>div:not(.bill-title){line-height:1.5}
+.tally-table{width:100%!important;border-collapse:collapse!important;table-layout:fixed!important}
+.tally-table th,.tally-table td{border:1px solid #111!important;padding:3px 3px!important;vertical-align:middle!important}
+.tally-table th{background:#edf1f5!important;text-align:center!important;font-size:7px!important;line-height:1.1!important}
+.tally-table td{font-size:7.8px!important;line-height:1.15!important}
+.tally-items col:nth-child(1){width:4%}.tally-items col:nth-child(2){width:24%}.tally-items col:nth-child(3){width:7%}.tally-items col:nth-child(4){width:5%}.tally-items col:nth-child(5){width:5%}.tally-items col:nth-child(6){width:8%}.tally-items col:nth-child(7){width:5%}.tally-items col:nth-child(8){width:10%}.tally-items col:nth-child(9){width:6%}.tally-items col:nth-child(10){width:6%}.tally-items col:nth-child(11){width:6%}.tally-items col:nth-child(12){width:6%}.tally-items col:nth-child(13){width:8%}
+.tally-items tbody{height:75mm}
+.c{text-align:center!important}.r{text-align:right!important}
+.amount-total-row{display:grid!important;grid-template-columns:66% 34%!important;border-bottom:1px solid #111!important}
+.amount-words{min-height:12mm!important;padding:7px 8px!important;border-right:1px solid #111!important}
+.amount-words .label,.bottom-three .label{font-weight:700;margin-bottom:5px}
+.summary-total{padding:0!important}
+.summary-total>div{display:flex;justify-content:space-between;padding:2.5px 6px;border-bottom:1px solid #bbb}
+.grand-total-row{font-size:13px;font-weight:800;border:1px solid #111!important;margin:3px!important;padding:4px 6px!important}
+.eoe{justify-content:flex-end!important;border:0!important;font-size:7px}
+.bottom-three{display:grid!important;grid-template-columns:34% 34% 32%!important;min-height:32mm!important;border-bottom:1px solid #111}
+.bottom-three>div{padding:6px 7px;border-right:1px solid #111;line-height:1.45}
+.bottom-three>div:last-child{border-right:0}
+.authorised-box{text-align:center!important}
+.seal{width:48px;height:48px;border:2px solid #173b72;border-radius:50%;display:grid;place-items:center;margin:5px auto;color:#173b72;font-size:20px;font-weight:800}
+.sign-line{width:70%;border-top:1px dotted #111;margin:7px auto 3px}
+.declaration-row{display:grid!important;grid-template-columns:66% 34%!important;min-height:22mm;border-bottom:1px solid #111}
+.declaration-row>div{padding:7px;line-height:1.4}
+.rupee-circle{display:inline-grid;place-items:center;width:23px;height:23px;border:1px solid #111;border-radius:50%;margin-right:7px;font-weight:700}
+.dotted-sign{border-bottom:1px dotted #111;margin-top:15px}
+.computer-generated{text-align:center;padding:4px;font-size:8px;font-style:italic;font-weight:700}
+@media print{
+ @page{size:A4 portrait;margin:5mm}
+ body *{visibility:hidden!important}
+ .invoice-print,.invoice-print *{visibility:visible!important}
+ .invoice-print{position:absolute!important;left:0!important;top:0!important;width:190mm!important;min-height:287mm!important;margin:0!important;padding:0!important}
+ .no-print{display:none!important}
+ .tally-invoice{width:190mm!important;margin:0!important;border:1px solid #111!important}
+}
+
+/* FINAL FIX: balanced A4 Tally proportions */
+.invoice-print.tally-invoice .tally-top{
+  grid-template-columns:66% 34%!important;
+  align-items:stretch!important;
+}
+.invoice-print.tally-invoice .company-tax-row{
+  min-height:30mm!important;
+}
+.invoice-print.tally-invoice .bill-to-box{
+  min-height:30mm!important;
+}
+.invoice-print.tally-invoice .invoice-meta{
+  height:100%!important;
+}
+.invoice-print.tally-invoice .invoice-meta>div{
+  min-height:7mm!important;
+  padding:2.5px 4px!important;
+}
+.invoice-print.tally-invoice .invoice-meta .meta-wide{
+  min-height:7mm!important;
+}
+.invoice-print.tally-invoice .bill-to-box>div{
+  min-height:30mm!important;
+}
+@media print{
+  .invoice-print.tally-invoice .company-tax-row{
+    min-height:30mm!important;
+  }
+  .invoice-print.tally-invoice .bill-to-box{
+    min-height:30mm!important;
+  }
+}
+
+
+/* FINAL FIX: Bill To direct child selector was making every address line 30-39mm tall */
+.invoice-print.tally-invoice .bill-to-box{
+  min-height:42mm!important;
+  padding:6px 7px!important;
+}
+.invoice-print.tally-invoice .bill-to-box>div{
+  width:auto!important;
+  min-height:0!important;
+  padding:0!important;
+  border-right:0!important;
+  border-bottom:0!important;
+}
+.invoice-print.tally-invoice .bill-to-box .bill-title{
+  width:auto!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0 0 3px!important;
+  border:0!important;
+  font-size:8px!important;
+  font-weight:700!important;
+}
+.invoice-print.tally-invoice .bill-to-box b{
+  display:block!important;
+  margin:0 0 4px!important;
+}
+.invoice-print.tally-invoice .bill-to-box>div:not(.bill-title){
+  line-height:1.35!important;
+  margin:0!important;
+}
+
+
+/* TARGETED FIX: keep item description at the top of the invoice row */
+.invoice-print.tally-invoice .tally-items tbody td:nth-child(2){
+  vertical-align:top!important;
+  padding-top:5px!important;
+}
+
+
+/* FINAL: keep every invoice item value aligned at the top of its row */
+.invoice-print.tally-invoice .tally-items tbody td{
+  vertical-align:top!important;
+  padding-top:5px!important;
+}
+
+
+/* TALLY-STYLE TAX ANALYSIS */
+.invoice-print.tally-invoice .tax-analysis{border-bottom:1px solid #111!important;background:#fff!important}
+.invoice-print.tally-invoice .tax-analysis-title{text-align:center;font-weight:800;font-size:11px;padding:3px 0;border-bottom:1px solid #111!important}
+.invoice-print.tally-invoice .tax-analysis-table{width:100%!important;border-collapse:collapse!important;table-layout:fixed!important}
+.invoice-print.tally-invoice .tax-analysis-table th,
+.invoice-print.tally-invoice .tax-analysis-table td{border:1px solid #111!important;padding:3px 4px!important;font-size:8px!important;line-height:1.15!important;vertical-align:middle!important}
+.invoice-print.tally-invoice .tax-analysis-table th{text-align:center!important;background:#edf1f5!important;font-weight:700!important}
+.invoice-print.tally-invoice .tax-analysis-table td:first-child{width:27%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(2){width:14%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(3){width:10%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(4){width:14%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(5){width:10%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(6){width:14%!important}
+.invoice-print.tally-invoice .tax-analysis-table td:nth-child(7){width:15%!important}
+
+
+.company-seal-signature{
+  display:block;
+  width:90%;
+  max-width:210px;
+  height:auto;
+  margin:5px auto 2px;
+  object-fit:contain;
+}
+
+
+/* Mobile invoice GST type visibility */
+@media (max-width: 700px){
+  .invoice-items{font-size:10px;table-layout:fixed}
+  .invoice-items th,.invoice-items td{padding:3px}
+  .invoice-items input,.invoice-items select{padding:5px 3px;font-size:10px;min-width:0}
+  .invoice-items th:nth-child(1){width:25%}
+  .invoice-items th:nth-child(2){width:10%}
+  .invoice-items th:nth-child(3){width:11%}
+  .invoice-items th:nth-child(4){width:12%}
+  .invoice-items th:nth-child(5){width:12%}
+  .invoice-items th:nth-child(6){width:22%}
+  .invoice-items th:nth-child(7){width:8%}
+}
+
+
+/* =========================================================
+   FINAL PDF FIX — ONE A4 PAGE / NO DUPLICATE SECOND PAGE
+   Keep the approved invoice design unchanged.
+========================================================= */
+@media print{
+  html, body{
+    width:210mm!important;
+    height:297mm!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+
+  .modal,
+  .modal.open{
+    position:static!important;
+    inset:auto!important;
+    display:block!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    padding:0!important;
+    margin:0!important;
+    overflow:visible!important;
+    background:transparent!important;
+    align-items:initial!important;
+    justify-content:initial!important;
+  }
+
+  .modalbox{
+    position:static!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+  }
+
+  .invoice-print.tally-invoice{
+    position:relative!important;
+    left:auto!important;
+    top:auto!important;
+    width:190mm!important;
+    height:287mm!important;
+    min-height:287mm!important;
+    max-height:287mm!important;
+    margin:0 auto!important;
+    padding:0!important;
+    overflow:hidden!important;
+    transform-origin:top center!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .invoice-print.tally-invoice .tally-top,
+  .invoice-print.tally-invoice .tally-items,
+  .invoice-print.tally-invoice .amount-total-row,
+  .invoice-print.tally-invoice .tax-analysis,
+  .invoice-print.tally-invoice .bottom-three,
+  .invoice-print.tally-invoice .declaration-row{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .invoice-print.tally-invoice .tally-items tbody{
+    height:58mm!important;
+  }
+
+  .invoice-print.tally-invoice .company-tax-row{
+    min-height:29mm!important;
+  }
+
+  .invoice-print.tally-invoice .bill-to-box{
+    min-height:30mm!important;
+  }
+
+  .invoice-print.tally-invoice .bottom-three{
+    min-height:27mm!important;
+  }
+
+  .invoice-print.tally-invoice .declaration-row{
+    min-height:18mm!important;
+  }
+
+  .invoice-print.tally-invoice .computer-generated{
+    padding:2px!important;
+    font-size:7px!important;
+  }
+
+  .invoice-print.tally-invoice .company-seal-signature{
+    max-height:48mm!important;
+  }
+}
+
+
+/* COMPACT FIX — reduce blank space below Bank Details / Terms & Conditions */
+.invoice-print.tally-invoice .bottom-three{
+  min-height:23mm!important;
+}
+.invoice-print.tally-invoice .bottom-three>div{
+  padding:5px 6px!important;
+  line-height:1.3!important;
+}
+.invoice-print.tally-invoice .company-seal-signature{
+  width:78%!important;
+  max-width:150px!important;
+  max-height:34mm!important;
+  height:auto!important;
+  margin:3px auto 1px!important;
+}
+@media print{
+  .invoice-print.tally-invoice .bottom-three{
+    min-height:23mm!important;
+  }
+  .invoice-print.tally-invoice .bottom-three>div{
+    padding:4px 6px!important;
+    line-height:1.25!important;
+  }
+  .invoice-print.tally-invoice .company-seal-signature{
+    max-height:34mm!important;
+  }
+}
+
+
+/* PM ENTERPRISE invoice logo */
+.invoice-print.tally-invoice .pm-logo{
+  width:100%;
+  text-align:center;
+  color:#173b72;
+  padding-top:3px;
+}
+.invoice-print.tally-invoice .pm-logo-ring{
+  width:56px;
+  height:56px;
+  margin:0 auto 4px;
+  border:3px solid #173b72;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.invoice-print.tally-invoice .pm-logo-ring:before,
+.invoice-print.tally-invoice .pm-logo-ring:after{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border:1px solid #173b72;
+  border-radius:50%;
+}
+.invoice-print.tally-invoice .pm-logo-ring:after{
+  inset:10px;
+}
+.invoice-print.tally-invoice .pm-logo-ring span{
+  position:relative;
+  z-index:1;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+.invoice-print.tally-invoice .pm-logo-name{
+  font-size:7.5px;
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:.5px;
+}
+@media print{
+  .invoice-print.tally-invoice .pm-logo-ring{
+    width:52px;
+    height:52px;
+  }
+}
+
+
+/* FINAL MOBILE PDF PREVIEW FIX
+   Show the invoice and its print ancestors using display instead of
+   visibility-only printing. This prevents a blank Android Chrome print preview.
+*/
+@media print{
+  html,body{
+    visibility:visible!important;
+    background:#fff!important;
+    overflow:hidden!important;
+  }
+
+  body > *{
+    display:none!important;
+  }
+
+  .modal,
+  .modal.open{
+    display:block!important;
+    visibility:visible!important;
+    position:static!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+    overflow:visible!important;
+  }
+
+  .modalbox{
+    display:block!important;
+    visibility:visible!important;
+    position:static!important;
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:0!important;
+    background:#fff!important;
+    border:0!important;
+    border-radius:0!important;
+    overflow:visible!important;
+  }
+
+  .modalbox > *{
+    visibility:visible!important;
+  }
+
+  .invoice-print.tally-invoice{
+    display:block!important;
+    visibility:visible!important;
+    position:relative!important;
+    width:190mm!important;
+    height:287mm!important;
+    min-height:287mm!important;
+    max-height:287mm!important;
+    margin:0 auto!important;
+    padding:0!important;
+    overflow:hidden!important;
+    background:#fff!important;
+    color:#111!important;
+    opacity:1!important;
+  }
+
+  .invoice-print.tally-invoice *{
+    display:revert;
+    visibility:visible!important;
+    opacity:1!important;
+  }
+
+  .invoice-print.tally-invoice .no-print,
+  .modalbox > .toolbar.no-print{
+    display:none!important;
+  }
+}
