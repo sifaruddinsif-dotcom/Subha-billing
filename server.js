@@ -100,6 +100,13 @@ try{
   const removeNames=['Notebook','Pencil','Eraser'];
   const del=db.prepare('DELETE FROM invoice_items WHERE invoice_id=? AND name=?');
   for(const n of removeNames)del.run(fixInv.id,n);
+  // A4 Paper must also be 18% GST (9% CGST + 9% SGST), not 12%.
+  const a4=db.prepare("SELECT * FROM invoice_items WHERE invoice_id=? AND name='A4 Paper'").get(fixInv.id);
+  if(a4){
+   const gross=a4.total,base=gross/1.18,tax=gross-base;
+   db.prepare('UPDATE invoice_items SET gst=18,taxable=?,tax=?,total=? WHERE id=?').run(base,tax,gross,a4.id);
+   if(a4.product_id)db.prepare('UPDATE products SET gst=18,hsn=\'4802\' WHERE id=?').run(a4.product_id);
+  }
   const newItems=[
    ['Paper Punch','8472',10,100,18],
    ['Glue Stick','3506',25,50,18],
