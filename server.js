@@ -91,6 +91,37 @@ try{
 
 
 // BMMU September 2026 stationery invoice
+try{
+ const no='PME-2026-601';
+ if(!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(no)){
+  const cn='BMMU Diyungbra Block,Diyungmukh-782448';
+  let cu=db.prepare('SELECT * FROM customers WHERE name=?').get(cn);
+  if(!cu){
+   const x=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run(cn,'Diyungmukh-782448','Assam');
+   cu=db.prepare('SELECT * FROM customers WHERE id=?').get(x.lastInsertRowid);
+  }
+  const items=[
+   ['A4 Paper','4802',5,800],['Ball Pen','9608',50,10],['Marker Pen','9608',20,25],
+   ['Register','4820',20,200],['File Folder','4820',20,25],['Stapler','8305',5,100],
+   ['Paper Punch','8472',10,100],['Glue Stick','3506',25,50],['Paper Clip','8305',100,5],['Calculator','8470',5,250]
+  ];
+  const ps=[];
+  for(const x of items){
+   let p=db.prepare('SELECT * FROM products WHERE name=?').get(x[0]);
+   if(!p){
+    const q=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)').run(x[0],'PME-SEP-'+x[1]+'-'+x[0].replace(/ /g,''),'Stationery','PCS',x[1],0,x[3],18,x[2],0);
+    p=db.prepare('SELECT * FROM products WHERE id=?').get(q.lastInsertRowid);
+   }else db.prepare('UPDATE products SET gst=18,hsn=?,sale_price=? WHERE id=?').run(x[1],x[3],p.id);
+   const gross=x[2]*x[3],base=gross/1.18,tax=gross-base;
+   ps.push({p,qty:x[2],rate:x[3],base,tax,gross});
+  }
+  const sub=ps.reduce((s,x)=>s+x.gross,0),base=ps.reduce((s,x)=>s+x.base,0),tax=ps.reduce((s,x)=>s+x.tax,0);
+  const iv=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(no,cu.id,sub,0,base,tax/2,tax/2,0,0,sub,0,'Pending','Credit','Stationery office - September 2026','2026-09-25 00:00:00');
+  const ii=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+  for(const x of ps)ii.run(iv.lastInsertRowid,x.p.id,x.p.name,x.qty,x.rate,18,'INCLUDING',0,x.base,x.tax,x.gross);
+ }
+}catch(e){console.error('BMMU September seed:',e.message)}
+
 
 // Correct September BMMU invoice PME-2026-601: exactly 10 items, all at 18% GST
 try{
