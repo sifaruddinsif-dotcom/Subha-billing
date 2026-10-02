@@ -91,6 +91,35 @@ try{
 
 
 // BMMU September 2026 stationery invoice
+
+// Correct September BMMU invoice items: remove Notebook/Pencil/Eraser and use only 18% GST items
+try{
+ const fixNo='PME-2026-601';
+ const fixInv=db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(fixNo);
+ if(fixInv){
+  const removeNames=['Notebook','Pencil','Eraser'];
+  const del=db.prepare('DELETE FROM invoice_items WHERE invoice_id=? AND name=?');
+  for(const n of removeNames)del.run(fixInv.id,n);
+  const newItems=[
+   ['Paper Punch','8472',10,100,18],
+   ['Glue Stick','3506',25,50,18],
+   ['Paper Clip','8305',100,5,18]
+  ];
+  const ii=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+  for(const x of newItems){
+   let p=db.prepare('SELECT * FROM products WHERE name=?').get(x[0]);
+   if(!p){
+    const z=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)').run(x[0],'PME-SEP-'+x[1]+'-'+x[0].replace(/ /g,''),'Stationery','PCS',x[1],0,x[3],18,x[2],0);
+    p=db.prepare('SELECT * FROM products WHERE id=?').get(z.lastInsertRowid);
+   }else db.prepare('UPDATE products SET gst=18,hsn=?,sale_price=? WHERE id=?').run(x[1],x[3],p.id);
+   const gross=x[2]*x[3],base=gross/1.18,tax=gross-base;
+   ii.run(fixInv.id,p.id,x[0],x[2],x[3],18,'INCLUDING',0,base,tax,gross);
+  }
+  const a=db.prepare('SELECT COALESCE(SUM(total),0) total,COALESCE(SUM(taxable),0) taxable,COALESCE(SUM(tax),0) tax FROM invoice_items WHERE invoice_id=?').get(fixInv.id);
+  db.prepare('UPDATE invoices SET subtotal=?,taxable=?,cgst=?,sgst=?,igst=0,roundoff=0,total=? WHERE id=?').run(a.total,a.taxable,a.tax/2,a.tax/2,a.total,fixInv.id);
+ }
+}catch(e){console.error('BMMU September item correction:',e.message)}
+
 try{
  const no='PME-2026-601';
  if(!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(no)){
@@ -100,7 +129,7 @@ try{
   const a=[
    ['A4 Paper','4802',5,800,18],['Ball Pen','9608',50,10,18],['Marker Pen','9608',20,25,18],
    ['Register','4820',20,200,18],['File Folder','4820',20,25,18],['Stapler','8305',5,100,18],
-   ['Notebook','4820',20,100,0],['Pencil','9609',50,10,12],['Eraser','4016',50,5,12],['Calculator','8470',5,250,18]
+   ['Paper Punch','8472',10,100,18],['Glue Stick','3506',25,50,18],['Paper Clip','8305',100,5,18],['Calculator','8470',5,250,18]
   ];
   const ps=[];
   for(const x of a){
