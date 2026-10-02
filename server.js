@@ -25,6 +25,35 @@ const defaults={business_name:'SUBHA BILLING',tagline:'Smart Billing. Premium Bu
 const insSet=db.prepare('INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)'); for(const [k,v] of Object.entries(defaults)) insSet.run(k,v);
 const adminEmail=process.env.ADMIN_EMAIL||'admin@subhabilling.com';
 if(!db.prepare('SELECT id FROM users WHERE email=?').get(adminEmail)){db.prepare('INSERT INTO users(name,email,password,role) VALUES(?,?,?,?)').run('Admin',adminEmail,bcrypt.hashSync(process.env.ADMIN_PASSWORD||'ChangeMe123!',10),'admin');}
+
+// Requested BMMU sample invoice
+try{
+  const billNo='BMMU-2026-0713-001';
+  if(!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(billNo)){
+    const customerName='BMMU Diyungbra Block,Diyungmukh-782448';
+    let customer=db.prepare('SELECT * FROM customers WHERE name=?').get(customerName);
+    if(!customer){
+      const cr=db.prepare('INSERT INTO customers(name,phone,address,gstin,state) VALUES(?,?,?,?,?)').run(customerName,'','Diyungmukh-782448','','Assam');
+      customer=db.prepare('SELECT * FROM customers WHERE id=?').get(cr.lastInsertRowid);
+    }
+    let product=db.prepare('SELECT * FROM products WHERE name=?').get('Office Stationery');
+    if(!product){
+      const pr=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)')
+        .run('Office Stationery','BMMU-STATIONERY-001','Stationery','LOT','4820',0,3096,18,1,0);
+      product=db.prepare('SELECT * FROM products WHERE id=?').get(pr.lastInsertRowid);
+    }
+    const total=3096;
+    const taxable=total/1.18;
+    const tax=total-taxable;
+    const cgst=tax/2, sgst=tax/2;
+    const invoice=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+      .run(billNo,customer.id,total,0,taxable,cgst,sgst,0,0,total,0,'Pending','Credit','Stationary office','2026-07-13 00:00:00');
+    db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
+      .run(invoice.lastInsertRowid,product.id,'Office Stationery',1,total,18,'INCLUDING',0,taxable,tax,total);
+    db.prepare('UPDATE products SET stock=stock-1 WHERE id=?').run(product.id);
+  }
+}catch(e){console.error('BMMU sample invoice seed failed:',e.message)}
+
 app.use(express.json({limit:'2mb'}));app.use(express.urlencoded({extended:true}));
 function auth(req,res,next){const h=req.headers.authorization||'';const t=h.startsWith('Bearer ')?h.slice(7):(req.query.token||'');if(!t)return res.status(401).json({error:'Login required'});try{req.user=jwt.verify(t,JWT_SECRET);next()}catch(e){res.status(401).json({error:'Session expired'})}}
 function settings(){return Object.fromEntries(db.prepare('SELECT key,value FROM settings').all().map(x=>[x.key,x.value]));}
