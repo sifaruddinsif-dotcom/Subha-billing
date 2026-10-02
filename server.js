@@ -101,7 +101,7 @@ try{
    cu=db.prepare('SELECT * FROM customers WHERE id=?').get(x.lastInsertRowid);
   }
   const items=[
-   ['A4 Paper','4802',5,800],['Ball Pen','9608',50,10],['Marker Pen','9608',20,25],
+   ['A4 Paper','4802',5,600],['Ball Pen','9608',50,10],['Marker Pen','9608',20,25],
    ['Register','4820',20,200],['File Folder','4820',20,25],['Stapler','8305',5,100],
    ['Paper Punch','8472',10,100],['Glue Stick','3506',25,50],['Paper Clip','8305',100,5],['Calculator','8470',5,250]
   ];
@@ -129,7 +129,7 @@ try{
  const fixInv=db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(fixNo);
  if(fixInv){
   const items=[
-   ['A4 Paper','4802',5,800],
+   ['A4 Paper','4802',5,600],
    ['Ball Pen','9608',50,10],
    ['Marker Pen','9608',20,25],
    ['Register','4820',20,200],
