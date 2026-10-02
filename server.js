@@ -65,13 +65,29 @@ try{
   const cn='BMMU Diyungbra Block,Diyungmukh-782448';
   let cu=db.prepare('SELECT * FROM customers WHERE name=?').get(cn);
   if(!cu){const x=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run(cn,'Diyungmukh-782448','Assam');cu=db.prepare('SELECT * FROM customers WHERE id=?').get(x.lastInsertRowid);}
-  const a=[['A4 Paper','4802',2,700,12],['Ball Pen','9608',20,10,18],['Marker Pen','9608',10,25,18],['Register','4820',5,150,18],['File Folder','4820',10,20,18],['Stapler','8305',2,75,18],['Notebook','4820',2,73,12]];
+  const a=[['A4 Paper','4802',2,700,12],['Ball Pen','9608',20,10,18],['Marker Pen','9608',10,25,18],['Register','4820',5,150,18],['File Folder','4820',10,20,18],['Stapler','8305',2,75,18],['Notebook','4820',2,73,0]];
   const ps=[]; for(const x of a){let p=db.prepare('SELECT * FROM products WHERE name=?').get(x[0]);if(!p){const q=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)').run(x[0],'PME-'+x[1]+'-'+x[0].replace(/ /g,''),'Stationery','PCS',x[1],0,x[3],x[4],x[2],0);p=db.prepare('SELECT * FROM products WHERE id=?').get(q.lastInsertRowid);}const gross=x[2]*x[3],base=gross/(1+x[4]/100),tax=gross-base;ps.push({p,qty:x[2],rate:x[3],gst:x[4],base,tax,gross});}
   const sub=ps.reduce((s,x)=>s+x.gross,0), base=ps.reduce((s,x)=>s+x.base,0), tax=ps.reduce((s,x)=>s+x.tax,0);
   const iv=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(no,cu.id,sub,0,base,tax/2,tax/2,0,0,sub,0,'Pending','Credit','Stationery office','2026-07-13 00:00:00');
   const ii=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)'); for(const x of ps)ii.run(iv.lastInsertRowid,x.p.id,x.p.name,x.qty,x.rate,x.gst,'INCLUDING',0,x.base,x.tax,x.gross);
  }
 }catch(e){console.error('BMMU invoice seed:',e.message)}
+
+
+// Correct existing BMMU invoice notebook GST to 0% without changing invoice layout
+try{
+ const fixNo='PME-2026-600';
+ const fixInv=db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(fixNo);
+ if(fixInv){
+  const nb=db.prepare("SELECT * FROM invoice_items WHERE invoice_id=? AND name='Notebook'").get(fixInv.id);
+  if(nb){
+   db.prepare('UPDATE invoice_items SET gst=0,taxable=total,tax=0 WHERE id=?').run(nb.id);
+   if(nb.product_id) db.prepare('UPDATE products SET gst=0 WHERE id=?').run(nb.product_id);
+   const a=db.prepare('SELECT COALESCE(SUM(total),0) total,COALESCE(SUM(taxable),0) taxable,COALESCE(SUM(tax),0) tax FROM invoice_items WHERE invoice_id=?').get(fixInv.id);
+   db.prepare('UPDATE invoices SET subtotal=?,taxable=?,cgst=?,sgst=?,igst=0,roundoff=0,total=? WHERE id=?').run(a.total,a.taxable,a.tax/2,a.tax/2,a.total,fixInv.id);
+  }
+ }
+}catch(e){console.error('BMMU GST correction:',e.message)}
 
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
