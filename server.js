@@ -92,65 +92,42 @@ try{
 
 // BMMU September 2026 stationery invoice
 
-// Correct September BMMU invoice items: remove Notebook/Pencil/Eraser and use only 18% GST items
+// Correct September BMMU invoice PME-2026-601: exactly 10 items, all at 18% GST
 try{
  const fixNo='PME-2026-601';
  const fixInv=db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(fixNo);
  if(fixInv){
-  const removeNames=['Notebook','Pencil','Eraser'];
-  const del=db.prepare('DELETE FROM invoice_items WHERE invoice_id=? AND name=?');
-  for(const n of removeNames)del.run(fixInv.id,n);
-  // A4 Paper must also be 18% GST (9% CGST + 9% SGST), not 12%.
-  const a4=db.prepare("SELECT * FROM invoice_items WHERE invoice_id=? AND name='A4 Paper'").get(fixInv.id);
-  if(a4){
-   const gross=a4.total,base=gross/1.18,tax=gross-base;
-   db.prepare('UPDATE invoice_items SET gst=18,taxable=?,tax=?,total=? WHERE id=?').run(base,tax,gross,a4.id);
-   if(a4.product_id)db.prepare('UPDATE products SET gst=18,hsn=\'4802\' WHERE id=?').run(a4.product_id);
-  }
-  const newItems=[
-   ['Paper Punch','8472',10,100,18],
-   ['Glue Stick','3506',25,50,18],
-   ['Paper Clip','8305',100,5,18]
+  const items=[
+   ['A4 Paper','4802',5,800],
+   ['Ball Pen','9608',50,10],
+   ['Marker Pen','9608',20,25],
+   ['Register','4820',20,200],
+   ['File Folder','4820',20,25],
+   ['Stapler','8305',5,100],
+   ['Paper Punch','8472',10,100],
+   ['Glue Stick','3506',25,50],
+   ['Paper Clip','8305',100,5],
+   ['Calculator','8470',5,250]
   ];
+  db.prepare('DELETE FROM invoice_items WHERE invoice_id=?').run(fixInv.id);
   const ii=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
-  for(const x of newItems){
+  let subtotal=0,taxable=0,tax=0;
+  for(const x of items){
    let p=db.prepare('SELECT * FROM products WHERE name=?').get(x[0]);
    if(!p){
     const z=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)').run(x[0],'PME-SEP-'+x[1]+'-'+x[0].replace(/ /g,''),'Stationery','PCS',x[1],0,x[3],18,x[2],0);
     p=db.prepare('SELECT * FROM products WHERE id=?').get(z.lastInsertRowid);
-   }else db.prepare('UPDATE products SET gst=18,hsn=?,sale_price=? WHERE id=?').run(x[1],x[3],p.id);
-   const gross=x[2]*x[3],base=gross/1.18,tax=gross-base;
-   ii.run(fixInv.id,p.id,x[0],x[2],x[3],18,'INCLUDING',0,base,tax,gross);
+   }else{
+    db.prepare('UPDATE products SET gst=18,hsn=?,sale_price=? WHERE id=?').run(x[1],x[3],p.id);
+   }
+   const gross=x[2]*x[3],base=gross/1.18,t=gross-base;
+   ii.run(fixInv.id,p.id,x[0],x[2],x[3],18,'INCLUDING',0,base,t,gross);
+   subtotal+=gross; taxable+=base; tax+=t;
   }
-  const a=db.prepare('SELECT COALESCE(SUM(total),0) total,COALESCE(SUM(taxable),0) taxable,COALESCE(SUM(tax),0) tax FROM invoice_items WHERE invoice_id=?').get(fixInv.id);
-  db.prepare('UPDATE invoices SET subtotal=?,taxable=?,cgst=?,sgst=?,igst=0,roundoff=0,total=? WHERE id=?').run(a.total,a.taxable,a.tax/2,a.tax/2,a.total,fixInv.id);
+  db.prepare('UPDATE invoices SET subtotal=?,discount=0,taxable=?,cgst=?,sgst=?,igst=0,roundoff=0,total=? WHERE id=?').run(subtotal,tax/2,taxable,tax/2,subtotal,fixInv.id);
  }
-}catch(e){console.error('BMMU September item correction:',e.message)}
+}catch(e){console.error('BMMU September 18% correction:',e.message)}
 
-try{
- const no='PME-2026-601';
- if(!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(no)){
-  const cn='BMMU Diyungbra Block,Diyungmukh-782448';
-  let cu=db.prepare('SELECT * FROM customers WHERE name=?').get(cn);
-  if(!cu){const z=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run(cn,'Diyungmukh-782448','Assam');cu=db.prepare('SELECT * FROM customers WHERE id=?').get(z.lastInsertRowid);}
-  const a=[
-   ['A4 Paper','4802',5,800,18],['Ball Pen','9608',50,10,18],['Marker Pen','9608',20,25,18],
-   ['Register','4820',20,200,18],['File Folder','4820',20,25,18],['Stapler','8305',5,100,18],
-   ['Paper Punch','8472',10,100,18],['Glue Stick','3506',25,50,18],['Paper Clip','8305',100,5,18],['Calculator','8470',5,250,18]
-  ];
-  const ps=[];
-  for(const x of a){
-   let p=db.prepare('SELECT * FROM products WHERE name=?').get(x[0]);
-   if(!p){const z=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)').run(x[0],'PME-SEP-'+x[1]+'-'+x[0].replace(/ /g,''),'Stationery','PCS',x[1],0,x[3],x[4],x[2],0);p=db.prepare('SELECT * FROM products WHERE id=?').get(z.lastInsertRowid);}
-   const gross=x[2]*x[3],base=x[4]===0?gross:gross/(1+x[4]/100),tax=gross-base;
-   ps.push({p,qty:x[2],rate:x[3],gst:x[4],base,tax,gross});
-  }
-  const total=ps.reduce((s,x)=>s+x.gross,0), taxable=ps.reduce((s,x)=>s+x.base,0), tax=ps.reduce((s,x)=>s+x.tax,0);
-  const iv=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(no,cu.id,total,0,taxable,tax/2,tax/2,0,0,total,0,'Pending','Credit','Stationery office - September 2026','2026-09-25 00:00:00');
-  const ii=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
-  for(const x of ps)ii.run(iv.lastInsertRowid,x.p.id,x.p.name,x.qty,x.rate,x.gst,'INCLUDING',0,x.base,x.tax,x.gross);
- }
-}catch(e){console.error('BMMU September invoice seed:',e.message)}
 
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
