@@ -57,6 +57,22 @@ app.get('/api/payments',auth,(req,res)=>res.json(db.prepare('SELECT p.*,COALESCE
 app.get('/api/reports/sales',auth,(req,res)=>{const from=req.query.from||'2000-01-01',to=req.query.to||'2999-12-31';const rows=db.prepare("SELECT substr(i.created_at,1,10) date,COUNT(*) invoices,ROUND(SUM(i.subtotal),2) subtotal,ROUND(SUM(i.discount),2) discount,ROUND(SUM(i.cgst+i.sgst+i.igst),2) tax,ROUND(SUM(i.total),2) total,ROUND(SUM(i.paid),2) paid FROM invoices i WHERE date(i.created_at) BETWEEN ? AND ? GROUP BY date ORDER BY date DESC").all(from,to);res.json(rows)});
 app.get('/api/reports/gst',auth,(req,res)=>res.json(db.prepare("SELECT substr(created_at,1,10) date,ROUND(SUM(taxable),2) taxable,ROUND(SUM(cgst),2) cgst,ROUND(SUM(sgst),2) sgst,ROUND(SUM(igst),2) igst,ROUND(SUM(total),2) total FROM invoices GROUP BY date ORDER BY date DESC").all()));
 app.get('/api/export/invoices.csv',auth,(req,res)=>{const rows=db.prepare('SELECT invoice_no,created_at,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode FROM invoices ORDER BY id DESC').all();const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';const csv=[Object.keys(rows[0]||{invoice_no:1}).join(','),...rows.map(r=>Object.values(r).map(esc).join(','))].join('\n');res.setHeader('Content-Type','text/csv');res.setHeader('Content-Disposition','attachment; filename="subha-billing-invoices.csv"');res.send(csv)});
+
+// BMMU invoice PME-2026-600
+try{
+ const no='PME-2026-600';
+ if(!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(no)){
+  const cn='BMMU Diyungbra Block,Diyungmukh-782448';
+  let cu=db.prepare('SELECT * FROM customers WHERE name=?').get(cn);
+  if(!cu){const x=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run(cn,'Diyungmukh-782448','Assam');cu=db.prepare('SELECT * FROM customers WHERE id=?').get(x.lastInsertRowid);}
+  const a=[['A4 Paper','4802',2,700,12],['Ball Pen','9608',20,10,18],['Marker Pen','9608',10,25,18],['Register','4820',5,150,18],['File Folder','4820',10,20,18],['Stapler','8305',2,75,18],['Notebook','4820',2,73,12]];
+  const ps=[]; for(const x of a){let p=db.prepare('SELECT * FROM products WHERE name=?').get(x[0]);if(!p){const q=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)').run(x[0],'PME-'+x[1]+'-'+x[0].replace(/ /g,''),'Stationery','PCS',x[1],0,x[3],x[4],x[2],0);p=db.prepare('SELECT * FROM products WHERE id=?').get(q.lastInsertRowid);}const gross=x[2]*x[3],base=gross/(1+x[4]/100),tax=gross-base;ps.push({p,qty:x[2],rate:x[3],gst:x[4],base,tax,gross});}
+  const sub=ps.reduce((s,x)=>s+x.gross,0), base=ps.reduce((s,x)=>s+x.base,0), tax=ps.reduce((s,x)=>s+x.tax,0);
+  const iv=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(no,cu.id,sub,0,base,tax/2,tax/2,0,0,sub,0,'Pending','Credit','Stationery office','2026-07-13 00:00:00');
+  const ii=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)'); for(const x of ps)ii.run(iv.lastInsertRowid,x.p.id,x.p.name,x.qty,x.rate,x.gst,'INCLUDING',0,x.base,x.tax,x.gross);
+ }
+}catch(e){console.error('BMMU invoice seed:',e.message)}
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
