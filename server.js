@@ -21,8 +21,9 @@ CREATE TABLE IF NOT EXISTS purchase_items(id INTEGER PRIMARY KEY AUTOINCREMENT,p
 CREATE TABLE IF NOT EXISTS payments(id INTEGER PRIMARY KEY AUTOINCREMENT,customer_id INTEGER,invoice_id INTEGER,amount REAL,mode TEXT,reference TEXT,note TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY(customer_id) REFERENCES customers(id),FOREIGN KEY(invoice_id) REFERENCES invoices(id));
 `);
 try{db.exec("ALTER TABLE invoice_items ADD COLUMN gst_mode TEXT DEFAULT 'EXCLUDING'");}catch(e){}
-const defaults={business_name:'SUBHA BILLING',tagline:'Smart Billing. Premium Business.',gstin:'',address:'',phone:'',email:'',invoice_prefix:'INV',state:'Maharashtra'};
+const defaults={business_name:'P.M. ENTERPRISE',tagline:'GST Tax Invoice',gstin:'18BKXPA2291M1ZJ',address:'HAFLONG BAZAR MASJID ROAD. DIMA HASAO DISTRICT ASSAM 788819',phone:'',email:'',invoice_prefix:'PME',state:'Assam',bank_name:'Central Bank of India',bank_account:'5408691136',ifsc:'CBIN0284634',branch:'Haflong'};
 const insSet=db.prepare('INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)'); for(const [k,v] of Object.entries(defaults)) insSet.run(k,v);
+const updSet=db.prepare('UPDATE settings SET value=? WHERE key=?'); for(const [k,v] of Object.entries(defaults)) updSet.run(v,k);
 const adminEmail=process.env.ADMIN_EMAIL||'admin@subhabilling.com';
 if(!db.prepare('SELECT id FROM users WHERE email=?').get(adminEmail)){db.prepare('INSERT INTO users(name,email,password,role) VALUES(?,?,?,?)').run('Admin',adminEmail,bcrypt.hashSync(process.env.ADMIN_PASSWORD||'ChangeMe123!',10),'admin');}
 
@@ -73,6 +74,23 @@ try{
  }
 }catch(e){console.error('BMMU invoice seed:',e.message)}
 
+
+// Sports Department Tax Invoice PME/2026/27/623
+try{
+ const no='PME/2026/27/623';
+ if(!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(no)){
+  const cn='The District Sports Officer';
+  let cu=db.prepare('SELECT * FROM customers WHERE name=?').get(cn);
+  if(!cu){const x=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run(cn,'Haflong, Dima Hasao, Assam','Assam');cu=db.prepare('SELECT * FROM customers WHERE id=?').get(x.lastInsertRowid);}
+  const a=[['Winner Trophy (29 cm)','83062920','Piece',3,8785,12],['Winner Trophy (28 cm)','83062920','Piece',3,7700,12],['Best Player Trophy (28 cm)','83062920','Piece',3,7700,12],['Medals (4 in. printing & ribbon)','83062920','Piece',150,190,12],['Nivia Football','95066210','Piece',65,1730,5],['Corner Flag','95069990','Set',10,1190,5],['Substitution Board','95069990','Piece',10,990,5],['Lime Powder','28365000','Bag',30,840,18],['Referee Dress','6103/6109','Set',10,2580,5],['Whistle','92089000','Piece',12,170,18],['Football Net','95069990','Pair/Set',10,5150,5]];
+  const ps=[];
+  for(const x of a){let p=db.prepare('SELECT * FROM products WHERE name=?').get(x[0]);if(!p){const q=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)').run(x[0],'PME-TAX-'+x[1]+'-'+x[0].replace(/[^A-Za-z0-9]/g,''),'Sports Supply',x[2],x[1],0,x[4],x[5],x[3]+1000,0);p=db.prepare('SELECT * FROM products WHERE id=?').get(q.lastInsertRowid);}else db.prepare('UPDATE products SET unit=?,hsn=?,sale_price=?,gst=? WHERE id=?').run(x[2],x[1],x[4],x[5],p.id);const gross=x[3]*x[4],base=gross/(1+x[5]/100),tax=gross-base;ps.push({p,qty:x[3],rate:x[4],gst:x[5],base,tax,gross});}
+  const sub=ps.reduce((s,x)=>s+x.gross,0),base=ps.reduce((s,x)=>s+x.base,0),tax=ps.reduce((s,x)=>s+x.tax,0);
+  const iv=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(no,cu.id,sub,0,base,tax/2,tax/2,0,0,sub,0,'Pending','Credit','Sports Department Tax Invoice','2026-10-07 00:00:00');
+  const ii=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+  for(const x of ps)ii.run(iv.lastInsertRowid,x.p.id,x.p.name,x.qty,x.rate,x.gst,'INCLUDING',0,x.base,x.tax,x.gross);
+ }
+}catch(e){console.error('Sports tax invoice seed:',e.message)}
 
 // Correct existing BMMU invoice notebook GST to 0% without changing invoice layout
 try{
