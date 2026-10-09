@@ -178,6 +178,60 @@ try{
 }catch(e){console.error('BMMU September 18% correction:',e.message)}
 
 
+
+// SUBHA SPORTS OFFICER INVOICE PME-2026-602
+// Idempotent seed so the requested invoice appears in SUBHA BILLING after deployment.
+try{
+ const no='PME-2026-602';
+ if(!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(no)){
+  const customerName='THE DISTRICT SPORTS OFFICER';
+  let cu=db.prepare('SELECT * FROM customers WHERE name=?').get(customerName);
+  if(!cu){
+   const x=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run(
+    customerName,'Haflong, Dima Hasao, Assam 788819','Assam'
+   );
+   cu=db.prepare('SELECT * FROM customers WHERE id=?').get(x.lastInsertRowid);
+  }else{
+   db.prepare('UPDATE customers SET address=?,state=? WHERE id=?').run(
+    'Haflong, Dima Hasao, Assam 788819','Assam',cu.id
+   );
+  }
+
+  // Rates supplied by the user are GST-inclusive. 18% is used as the
+  // current default for these lines; verify the applicable HSN/GST rate
+  // before issuing this tax invoice.
+  const items=[
+   {name:'Plastic Chair',qty:150,rate:535,gst:18,unit:'PCS'},
+   {name:'Plastic Table',qty:30,rate:1850,gst:18,unit:'PCS'},
+   {name:'Labour Charge',qty:1,rate:1200,gst:18,unit:'JOB'},
+   {name:'Transport',qty:1,rate:2800,gst:18,unit:'JOB'}
+  ];
+  const grossTotal=items.reduce((s,x)=>s+x.qty*x.rate,0);
+  let taxable=0,tax=0;
+  const prepared=items.map(x=>{
+   const gross=x.qty*x.rate;
+   const base=gross/(1+x.gst/100);
+   const itemTax=gross-base;
+   taxable+=base;tax+=itemTax;
+   return {...x,gross,base,itemTax};
+  });
+  const inv=db.prepare(
+   'INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+  ).run(
+   no,cu.id,grossTotal,0,taxable,tax/2,tax/2,0,grossTotal-(taxable+tax),grossTotal,0,'Pending','Credit',
+   'GST-inclusive rates; verify GST rate and HSN before issuing.',
+   new Date().toISOString().slice(0,19).replace('T',' ')
+  );
+  const ii=db.prepare(
+   'INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,NULL,?,?,?,?,?,?,?,?,?)'
+  );
+  for(const x of prepared){
+   ii.run(inv.lastInsertRowid,x.name,x.qty,x.rate,x.gst,'INCLUDING',0,x.base,x.itemTax,x.gross);
+  }
+ }
+}catch(e){console.error('Sports Officer invoice seed:',e.message)}
+
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
