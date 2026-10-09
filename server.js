@@ -232,6 +232,33 @@ try{
 }catch(e){console.error('Sports Officer invoice seed:',e.message)}
 
 
+
+// Ensure PME-2026-602 item HSN/SAC codes are present for invoice display.
+try{
+ const inv=db.prepare("SELECT id FROM invoices WHERE invoice_no='PME-2026-602'").get();
+ if(inv){
+  const mappings=[
+   {name:'Plastic Chair',sku:'PME-SPORTS-94018000',hsn:'94018000',gst:18},
+   {name:'Plastic Table',sku:'PME-SPORTS-94037000',hsn:'94037000',gst:18},
+   {name:'Labour Charge',sku:'PME-SPORTS-LABOUR',hsn:'SAC: confirm',gst:18},
+   {name:'Transport',sku:'PME-SPORTS-TRANSPORT',hsn:'SAC 9965*',gst:18}
+  ];
+  for(const m of mappings){
+   let p=db.prepare('SELECT * FROM products WHERE name=?').get(m.name);
+   if(!p){
+    const sku=m.sku;
+    const x=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)')
+      .run(m.name,sku,'Sports Officer Invoice',m.name==='Labour Charge'||m.name==='Transport'?'JOB':'PCS',m.hsn,0,0,m.gst,0,0);
+    p=db.prepare('SELECT * FROM products WHERE id=?').get(x.lastInsertRowid);
+   }else{
+    db.prepare('UPDATE products SET hsn=? WHERE id=?').run(m.hsn,p.id);
+   }
+   db.prepare('UPDATE invoice_items SET product_id=? WHERE invoice_id=? AND name=?').run(p.id,inv.id,m.name);
+  }
+ }
+}catch(e){console.error('Sports Officer HSN display correction:',e.message)}
+
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
