@@ -1217,25 +1217,27 @@ async function newInvoice(){
 }
 
 function updateInvoiceTotals(rows){
-  const taxType=$('#itax')?.value||'LOCAL';
-  let subtotal=0, taxable=0, tax=0;
-  rows.forEach(r=>{
+  // Keep the live preview aligned with the server's GST-inclusive/exclusive
+  // calculation, including invoices that contain more than one GST rate.
+  let subtotal=0, taxableBeforeDiscount=0, taxBeforeDiscount=0;
+  (rows||[]).forEach(r=>{
     const qty=Math.max(0,Number(r.qty)||0);
     const rate=Math.max(0,Number(r.rate)||0);
     const disc=Math.max(0,Number(r.discount)||0);
     const gst=Math.max(0,Number(r.gst??0)||0);
-    const gross=qty*rate;
-    const netGross=Math.max(0,gross-disc);
+    const gross=Math.max(0,qty*rate-disc);
     const including=String(r.gst_mode||'EXCLUDING').toUpperCase()==='INCLUDING';
-    const base=including ? (gst>0 ? netGross/(1+gst/100) : netGross) : netGross;
-    subtotal+=gross;
-    taxable+=base;
-    tax+=including ? (netGross-base) : (base*gst/100);
+    const base=including ? (gst>0 ? gross/(1+gst/100) : gross) : gross;
+    const rowTax=including ? gross-base : base*gst/100;
+    subtotal+=qty*rate;
+    taxableBeforeDiscount+=base;
+    taxBeforeDiscount+=rowTax;
   });
-  const extra=Math.max(0,Number($('#idisc')?.value)||0);
-  taxable=Math.max(0,taxable-extra);
-  tax=taxable*(rows.length?tax/Math.max(1,taxable+extra):0);
-  const total=taxable+tax;
+  const extra=Math.min(Math.max(0,Number($('#idisc')?.value)||0),taxableBeforeDiscount);
+  const ratio=taxableBeforeDiscount>0 ? (taxableBeforeDiscount-extra)/taxableBeforeDiscount : 1;
+  const taxable=Math.max(0,taxableBeforeDiscount-extra);
+  const tax=Math.max(0,taxBeforeDiscount*ratio);
+  const total=Math.round((taxable+tax)*100)/100;
   const el=$('#invoice-live-total');
   if(el) el.textContent=money(total);
   const sub=$('#invoice-live-subtotal');
