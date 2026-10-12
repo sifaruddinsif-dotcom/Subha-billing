@@ -390,7 +390,14 @@ function header(title,button=''){
 
 async function dashboard(){
 
-  const d=await api('/dashboard');
+  let d;
+  try {
+    d=await api('/dashboard');
+  } catch (e) {
+    $('#content').innerHTML=header('Dashboard')+
+      '<div class="panel" style="padding:24px;margin-top:18px"><h3>Dashboard could not load</h3><p class="muted">Your billing data has not been deleted. Please open Sales / Billing to continue creating invoices.</p><p style="color:#ffb4b4">'+String(e.message||'Please reload and sign in again').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))+'</p><button class="btn primary" onclick="go(\'billing\')">Open Sales / Billing</button> <button class="btn" onclick="go(\'dashboard\')">Retry Dashboard</button></div>';
+    return;
+  }
 
   const max=Math.max(
     ...(d.chart.map(x=>x.total)),
