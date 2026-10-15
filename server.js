@@ -419,6 +419,38 @@ try {
  }
 } catch(e) { console.error('MAHUR-HEALTH-1500-V1 invoice seed:',e.message); }
 
+
+// One-time correction for the existing MAHUR ₹1,500 invoice.
+// Recalculate item-level GST and invoice totals from GST-inclusive rates without changing stock.
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName='mahur_1500_tax_invoice_recalculate_v1';
+ if(!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName)) {
+  const inv=db.prepare("SELECT id FROM invoices WHERE invoice_no='PME-2026-626'").get();
+  if(inv) {
+   const items=db.prepare("SELECT ii.*,p.gst product_gst,p.hsn product_hsn FROM invoice_items ii LEFT JOIN products p ON p.id=ii.product_id WHERE ii.invoice_id=?").all(inv.id);
+   let subtotal=0,taxable=0,cgst=0,sgst=0,igst=0;
+   const updateItem=db.prepare("UPDATE invoice_items SET gst=?,taxable=?,tax=?,total=? WHERE id=?");
+   for(const item of items) {
+    const gst=Number(item.product_gst ?? item.gst ?? 0);
+    const qty=Number(item.qty)||0,rate=Number(item.rate)||0,discount=Number(item.discount)||0;
+    const gross=Math.max(0,qty*rate-discount);
+    const base=gst>0?gross/(1+gst/100):gross;
+    const tax=gross-base;
+    subtotal+=qty*rate;
+    taxable+=base;
+    cgst+=tax/2;sgst+=tax/2;
+    updateItem.run(gst,base,tax,gross,item.id);
+   }
+   const total=Math.round(taxable+cgst+sgst+igst);
+   const roundoff=total-(taxable+cgst+sgst+igst);
+   db.prepare("UPDATE invoices SET subtotal=?,taxable=?,cgst=?,sgst=?,igst=?,roundoff=?,total=?,notes=? WHERE id=?")
+    .run(subtotal,taxable,cgst,sgst,igst,roundoff,total,'GST-inclusive item rates; local supply split into CGST and SGST. Verify HSN/GST applicability before issue.',inv.id);
+  }
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+ }
+} catch(e) { console.error('MAHUR ₹1,500 invoice correction:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
