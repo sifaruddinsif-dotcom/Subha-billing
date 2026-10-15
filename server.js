@@ -338,6 +338,31 @@ try {
  }
 } catch(e) { console.error('Mahur Higher Secondary School invoice seed:',e.message); }
 
+// Health and Sanitation Club product catalogue seed (idempotent).
+// HSN/GST for composition-dependent goods must be checked against the exact product invoice/label.
+try {
+ const healthItems = [
+  {name:'Dustbin',sku:'HEALTH-SAN-DUSTBIN',category:'Health and Sanitation Club',unit:'PCS',hsn:'3924',gst:18},
+  {name:'Floor Cleaning Brush',sku:'HEALTH-SAN-FLOOR-BRUSH',category:'Health and Sanitation Club',unit:'PCS',hsn:'9603',gst:18},
+  {name:'Phenyl / Floor Cleaner',sku:'HEALTH-SAN-PHENYL',category:'Health and Sanitation Club',unit:'BOTTLE',hsn:'3402',gst:18},
+  {name:'Toilet Cleaner',sku:'HEALTH-SAN-TOILET-CLEANER',category:'Health and Sanitation Club',unit:'BOTTLE',hsn:'3402',gst:18},
+  {name:'First Aid Box',sku:'HEALTH-SAN-FIRST-AID-BOX',category:'Health and Sanitation Club',unit:'PCS',hsn:'30065000',gst:5},
+  {name:'Cotton Roll',sku:'HEALTH-SAN-COTTON-ROLL',category:'Health and Sanitation Club',unit:'ROLL',hsn:'3005',gst:5},
+  {name:'Water Bottle / Drinking Water Container',sku:'HEALTH-SAN-WATER-CONTAINER',category:'Health and Sanitation Club',unit:'PCS',hsn:'3924',gst:18}
+ ];
+ const findHealthProduct = db.prepare('SELECT id FROM products WHERE sku=? OR name=?');
+ const addHealthProduct = db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)');
+ const updateHealthProduct = db.prepare("UPDATE products SET sku=COALESCE(NULLIF(sku,''),?),category=?,unit=?,hsn=?,gst=? WHERE id=?");
+ for (const p of healthItems) {
+  const existing = findHealthProduct.get(p.sku,p.name);
+  if (!existing) {
+   addHealthProduct.run(p.name,p.sku,p.category,p.unit,p.hsn,0,0,p.gst,0,0);
+  } else {
+   updateHealthProduct.run(p.sku,p.category,p.unit,p.hsn,p.gst,existing.id);
+  }
+ }
+} catch(e) { console.error('Health and Sanitation Club catalogue seed:', e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
