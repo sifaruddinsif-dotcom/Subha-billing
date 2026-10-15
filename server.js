@@ -297,6 +297,47 @@ try {
  }
 } catch(e) { console.error('School stationery opening stock migration:',e.message); }
 
+// One-time MAHUR HIGHER SECONDARY SCHOOL tax invoice for the school stationery catalogue.
+// Prices are GST-inclusive and quantities/rates are a proposed split to make the invoice total exactly Rs 10,000.
+try {
+ const invoiceNo = 'PME-2026-625';
+ if (!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(invoiceNo)) {
+  let customer = db.prepare('SELECT * FROM customers WHERE name=?').get('MAHUR HIGHER SECONDARY SCHOOL');
+  if (!customer) {
+   const c = db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run('MAHUR HIGHER SECONDARY SCHOOL','Assam','Assam');
+   customer = db.prepare('SELECT * FROM customers WHERE id=?').get(c.lastInsertRowid);
+  }
+  const lines = [
+   {sku:'SCHOOL-COLOUR-PAPER',qty:10,rate:100},
+   {sku:'SCHOOL-FABER-COLOUR',qty:10,rate:150},
+   {sku:'SCHOOL-SKETCH-PEN',qty:10,rate:100},
+   {sku:'SCHOOL-DRAWING-WHITE',qty:50,rate:20},
+   {sku:'SCHOOL-DRAWING-COLOURS',qty:50,rate:20},
+   {sku:'SCHOOL-MODELLING-CLAY',qty:10,rate:100},
+   {sku:'SCHOOL-PENCIL',qty:100,rate:35}
+  ];
+  const prepared = lines.map(x => {
+   const p = db.prepare('SELECT * FROM products WHERE sku=?').get(x.sku);
+   if (!p) throw new Error('School stationery product missing: '+x.sku);
+   const gross = x.qty*x.rate;
+   const base = p.gst>0 ? gross/(1+p.gst/100) : gross;
+   return {p,qty:x.qty,rate:x.rate,gross,base,tax:gross-base};
+  });
+  const grossTotal = prepared.reduce((s,x)=>s+x.gross,0);
+  if (Math.abs(grossTotal-10000)>0.001) throw new Error('Mahur invoice total is not Rs 10,000');
+  const taxable = prepared.reduce((s,x)=>s+x.base,0);
+  const tax = prepared.reduce((s,x)=>s+x.tax,0);
+  const inv = db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+   .run(invoiceNo,customer.id,grossTotal,0,taxable,tax/2,tax/2,0,grossTotal-(taxable+tax),grossTotal,0,'Pending','Credit','GST-inclusive rates; verify HSN/GST applicability before issue.','2026-10-15 00:00:00');
+  const addLine = db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+  const reduceStock = db.prepare('UPDATE products SET stock=stock-? WHERE id=?');
+  for (const x of prepared) {
+   addLine.run(inv.lastInsertRowid,x.p.id,x.p.name,x.qty,x.rate,x.p.gst,'INCLUDING',0,x.base,x.tax,x.gross);
+   reduceStock.run(x.qty,x.p.id);
+  }
+ }
+} catch(e) { console.error('Mahur Higher Secondary School invoice seed:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
