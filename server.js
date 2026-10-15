@@ -375,6 +375,50 @@ try {
  }
 } catch(e) { console.error('Health and Sanitation opening stock migration:',e.message); }
 
+
+// MAHUR HIGHER SECONDARY SCHOOL Health and Sanitation Club tax invoice.
+// Proposed GST-inclusive item split totals exactly Rs 1,500; seeded once.
+try {
+ const invoiceNo='PME-2026-626';
+ if(!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(invoiceNo)) {
+  let customer=db.prepare('SELECT * FROM customers WHERE name=?').get('MAHUR HIGHER SECONDARY SCHOOL');
+  if(!customer) {
+   const c=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run('MAHUR HIGHER SECONDARY SCHOOL','Assam','Assam');
+   customer=db.prepare('SELECT * FROM customers WHERE id=?').get(c.lastInsertRowid);
+  }
+  const lines=[
+   {sku:'HEALTH-SAN-DUSTBIN',qty:2,rate:200},
+   {sku:'HEALTH-SAN-FLOOR-BRUSH',qty:2,rate:100},
+   {sku:'HEALTH-SAN-PHENYL',qty:4,rate:100},
+   {sku:'HEALTH-SAN-TOILET-CLEANER',qty:2,rate:100},
+   {sku:'HEALTH-SAN-FIRST-AID-BOX',qty:1,rate:150},
+   {sku:'HEALTH-SAN-COTTON-ROLL',qty:2,rate:50},
+   {sku:'HEALTH-SAN-WATER-CONTAINER',qty:1,rate:50}
+  ];
+  const prepared=lines.map(x=>{
+   const p=db.prepare('SELECT * FROM products WHERE sku=?').get(x.sku);
+   if(!p) throw new Error('Health and Sanitation product missing: '+x.sku);
+   if(Number(p.stock)<x.qty) throw new Error('Insufficient stock for '+p.name);
+   const gross=x.qty*x.rate;
+   const base=p.gst>0?gross/(1+p.gst/100):gross;
+   return {...x,p,gross,base,tax:gross-base};
+  });
+  const grossTotal=prepared.reduce((s,x)=>s+x.gross,0);
+  if(Math.abs(grossTotal-1500)>0.001) throw new Error('Mahur Health invoice total is not Rs 1,500');
+  const taxable=prepared.reduce((s,x)=>s+x.base,0);
+  const tax=prepared.reduce((s,x)=>s+x.tax,0);
+  const now=new Date().toISOString().slice(0,19).replace('T',' ');
+  const inv=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+   .run(invoiceNo,customer.id,grossTotal,0,taxable,tax/2,tax/2,0,grossTotal-(taxable+tax),grossTotal,0,'Pending','Credit','MAHUR-HEALTH-1500-V1; proposed GST-inclusive rates; verify HSN/GST applicability before issue.',now);
+  const addLine=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+  const reduceStock=db.prepare('UPDATE products SET stock=stock-? WHERE id=?');
+  for(const x of prepared) {
+   addLine.run(inv.lastInsertRowid,x.p.id,x.p.name,x.qty,x.rate,x.p.gst,'INCLUDING',0,x.base,x.tax,x.gross);
+   reduceStock.run(x.qty,x.p.id);
+  }
+ }
+} catch(e) { console.error('MAHUR-HEALTH-1500-V1 invoice seed:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
