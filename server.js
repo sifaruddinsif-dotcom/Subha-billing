@@ -496,6 +496,29 @@ try {
  }
 } catch(e) { console.error('Invoice 626 GST correction failed',e.message); }
 
+// One-time inventory seed: Social Service Club cleaning items.
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName='social_service_club_cleaning_stock_1000_v1';
+ if(!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName)) {
+  const products = [
+   {sku:'SSC-HANDWASH', name:'Handwash', hsn:'34013090'},
+   {sku:'SSC-FLOOR-WIPER', name:'Floor Wiper', hsn:'96039000'},
+   {sku:'SSC-BLACK-PHENYL', name:'Black Phenyl', hsn:'38089400'},
+   {sku:'SSC-GLASS-CLEANER', name:'Glass Cleaner', hsn:'34025000'}
+  ];
+  const find=db.prepare('SELECT id FROM products WHERE sku=?');
+  const insert=db.prepare("INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,'Cleaning Supplies','PCS',?,0,0,18,1000,0)");
+  const update=db.prepare("UPDATE products SET name=?,category='Cleaning Supplies',unit='PCS',hsn=?,gst=18,stock=1000 WHERE id=?");
+  for(const p of products) {
+   const existing=find.get(p.sku);
+   if(existing) update.run(p.name,p.hsn,existing.id);
+   else insert.run(p.name,p.sku,p.hsn);
+  }
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+ }
+} catch(e) { console.error('Social Service Club stock seed failed:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
