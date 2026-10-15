@@ -363,6 +363,18 @@ try {
  }
 } catch(e) { console.error('Health and Sanitation Club catalogue seed:', e.message); }
 
+// One-time opening stock for Health and Sanitation Club items: 10,000 pieces each.
+// Migration marker prevents restarts from resetting stock after sales.
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName = 'health_sanitation_opening_stock_10000_v1';
+ const done = db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName);
+ if (!done) {
+  db.prepare("UPDATE products SET stock=10000 WHERE sku IN ('HEALTH-SAN-DUSTBIN','HEALTH-SAN-FLOOR-BRUSH','HEALTH-SAN-PHENYL','HEALTH-SAN-TOILET-CLEANER','HEALTH-SAN-FIRST-AID-BOX','HEALTH-SAN-COTTON-ROLL','HEALTH-SAN-WATER-CONTAINER')").run();
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+ }
+} catch(e) { console.error('Health and Sanitation opening stock migration:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
