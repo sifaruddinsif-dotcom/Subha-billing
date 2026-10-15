@@ -259,6 +259,28 @@ try{
 }catch(e){console.error('Sports Officer HSN display correction:',e.message)}
 
 
+// School drawing and stationery products: idempotent catalogue seed.
+// GST/HSN are provisional and must be verified against the exact product packaging
+// and current CBIC classification before issuing a tax invoice.
+try {
+ const schoolItems = [
+  {name:'Colour Paper',sku:'SCHOOL-COLOUR-PAPER',category:'School Stationery',unit:'PACKET',hsn:'4802/4823 - VERIFY',gst:12},
+  {name:'Faber-Castell Colour',sku:'SCHOOL-FABER-COLOUR',category:'School Stationery',unit:'BOX',hsn:'9609/3213 - VERIFY PRODUCT TYPE',gst:18},
+  {name:'Sketch Pen',sku:'SCHOOL-SKETCH-PEN',category:'School Stationery',unit:'PACKET',hsn:'9608 - VERIFY',gst:18},
+  {name:'Drawing Sheet - White',sku:'SCHOOL-DRAWING-WHITE',category:'School Stationery',unit:'SHEET',hsn:'4802 - VERIFY',gst:12},
+  {name:'Drawing Sheet - Colours',sku:'SCHOOL-DRAWING-COLOURS',category:'School Stationery',unit:'SHEET',hsn:'4802/4823 - VERIFY',gst:12},
+  {name:'Modelling Clay',sku:'SCHOOL-MODELLING-CLAY',category:'School Stationery',unit:'PACKET',hsn:'3407/9602 - VERIFY COMPOSITION',gst:18},
+  {name:'Pencil',sku:'SCHOOL-PENCIL',category:'School Stationery',unit:'PCS',hsn:'9609 - VERIFY',gst:12}
+ ];
+ const findProduct = db.prepare('SELECT id FROM products WHERE sku=? OR name=?');
+ const addProduct = db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)');
+ for (const p of schoolItems) {
+  if (!findProduct.get(p.sku,p.name)) {
+   addProduct.run(p.name,p.sku,p.category,p.unit,p.hsn,0,0,p.gst,0,0);
+  }
+ }
+} catch(e) { console.error('School stationery catalogue seed:', e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
