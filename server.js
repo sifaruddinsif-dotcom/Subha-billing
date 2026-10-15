@@ -284,6 +284,19 @@ try {
  }
 } catch(e) { console.error('School stationery catalogue seed:', e.message); }
 
+// One-time opening stock for the seven school stationery products: 20,000 each.
+// Migration marker prevents future server restarts from resetting stock after sales.
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName = 'school_stationery_opening_stock_20000_v1';
+ const done = db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName);
+ if (!done) {
+  db.prepare("UPDATE products SET stock=20000 WHERE sku IN ('SCHOOL-COLOUR-PAPER','SCHOOL-FABER-COLOUR','SCHOOL-SKETCH-PEN','SCHOOL-DRAWING-WHITE','SCHOOL-DRAWING-COLOURS','SCHOOL-MODELLING-CLAY','SCHOOL-PENCIL')").run();
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+  console.log('School stationery opening stock set to 20,000 per item.');
+ }
+} catch(e) { console.error('School stationery opening stock migration:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
