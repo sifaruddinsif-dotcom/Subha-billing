@@ -1703,3 +1703,23 @@ button{
   border-bottom:0!important;
   border-left:0!important;
 }
+
+
+/* Remove all internal item-table grid lines, including borders painted on table cells/rows. */
+.invoice-print.tally-invoice table.tally-items,
+.invoice-print.tally-invoice table.tally-items thead,
+.invoice-print.tally-invoice table.tally-items tbody,
+.invoice-print.tally-invoice table.tally-items tr,
+.invoice-print.tally-invoice table.tally-items th,
+.invoice-print.tally-invoice table.tally-items td{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+.invoice-print.tally-invoice table.tally-items{
+  border-collapse:separate!important;
+  border-spacing:0!important;
+}
+.invoice-print.tally-invoice table.tally-items thead th{
+  border-bottom:1px solid #111!important;
+}
