@@ -473,6 +473,29 @@ try {
  }
 } catch(e) { console.error('MAHUR GST fix failed',e.message); }
 
+
+// Fix the invoice visible in Sales/Billing screenshot (INV-2026-000626).
+// Ensure First Aid Box and Cotton Roll are 5% total GST, split 2.5% CGST + 2.5% SGST.
+try {
+ const inv=db.prepare("SELECT id FROM invoices WHERE invoice_no=?").get('INV-2026-000626');
+ if(inv) {
+  const items=db.prepare("SELECT * FROM invoice_items WHERE invoice_id=? AND name IN (?,?)").all(inv.id,'First Aid Box','Cotton Roll');
+  const update=db.prepare("UPDATE invoice_items SET gst=5, taxable=?, tax=?, total=? WHERE id=?");
+  for(const x of items) {
+   const qty=Number(x.qty)||0, rate=Number(x.rate)||0, discount=Number(x.discount)||0;
+   const gross=Math.max(0,qty*rate-discount), base=gross/1.05;
+   update.run(base,gross-base,gross,x.id);
+  }
+  if(items.length) {
+   const all=db.prepare("SELECT * FROM invoice_items WHERE invoice_id=?").all(inv.id);
+   let subtotal=0,taxable=0,tax=0;
+   for(const x of all){subtotal+=(Number(x.qty)||0)*(Number(x.rate)||0);taxable+=Number(x.taxable)||0;tax+=Number(x.tax)||0;}
+   const total=Math.round(taxable+tax),roundoff=total-taxable-tax;
+   db.prepare("UPDATE invoices SET subtotal=?,taxable=?,cgst=?,sgst=?,igst=0,roundoff=?,total=? WHERE id=?").run(subtotal,taxable,tax/2,tax/2,roundoff,total,inv.id);
+  }
+ }
+} catch(e) { console.error('Invoice 626 GST correction failed',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
