@@ -1694,3 +1694,12 @@ button{
     display:none!important;
   }
 }
+
+
+/* Invoice item rows: remove internal table/grid lines as requested; keep header and outer layout unchanged. */
+.invoice-print.tally-invoice .tally-items tbody td{
+  border:0!important;
+  border-right:0!important;
+  border-bottom:0!important;
+  border-left:0!important;
+}
