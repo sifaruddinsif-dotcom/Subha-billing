@@ -519,6 +519,52 @@ try {
  }
 } catch(e) { console.error('Social Service Club stock seed failed:',e.message); }
 
+// One-time MAHUR HIGHER SECONDARY SCHOOL cleaning-items tax invoice.
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName='mahur_social_service_cleaning_invoice_1500_v1';
+ if(!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName)) {
+  const invoiceNo='PME-2026-627';
+  if(!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(invoiceNo)) {
+   let customer=db.prepare('SELECT * FROM customers WHERE name=?').get('MAHUR HIGHER SECONDARY SCHOOL');
+   if(!customer) {
+    const c=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run('MAHUR HIGHER SECONDARY SCHOOL','Assam','Assam');
+    customer=db.prepare('SELECT * FROM customers WHERE id=?').get(c.lastInsertRowid);
+   }
+   const lines=[
+    {sku:'SSC-HANDWASH',name:'Handwash',hsn:'34013090',qty:2,rate:150},
+    {sku:'SSC-FLOOR-WIPER',name:'Floor Wiper',hsn:'96039000',qty:2,rate:150},
+    {sku:'SSC-BLACK-PHENYL',name:'Black Phenyl',hsn:'38089400',qty:2,rate:250},
+    {sku:'SSC-GLASS-CLEANER',name:'Glass Cleaner',hsn:'34025000',qty:2,rate:200}
+   ];
+   const prepared=lines.map(x=>{
+    let p=db.prepare('SELECT * FROM products WHERE sku=?').get(x.sku);
+    if(!p) {
+     const r=db.prepare("INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,'Cleaning Supplies','PCS',?,0,?,18,1000,0)").run(x.name,x.sku,x.hsn,x.rate);
+     p=db.prepare('SELECT * FROM products WHERE id=?').get(r.lastInsertRowid);
+    }
+    if(Number(p.stock)<x.qty) throw new Error('Insufficient stock for '+x.name);
+    db.prepare('UPDATE products SET name=?,hsn=?,unit=?,gst=18,sale_price=? WHERE id=?').run(x.name,x.hsn,'PCS',x.rate,p.id);
+    const gross=x.qty*x.rate, base=gross/1.18;
+    return {...x,p,gross,base,tax:gross-base};
+   });
+   const grossTotal=prepared.reduce((s,x)=>s+x.gross,0);
+   const taxable=prepared.reduce((s,x)=>s+x.base,0);
+   const tax=prepared.reduce((s,x)=>s+x.tax,0);
+   const now=new Date().toISOString().slice(0,19).replace('T',' ');
+   const inv=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(invoiceNo,customer.id,grossTotal,0,taxable,tax/2,tax/2,0,grossTotal-(taxable+tax),grossTotal,0,'Pending','Credit','Social Service Club cleaning items; GST-inclusive rates; verify product-specific HSN/GST applicability before statutory issue.',now);
+   const addLine=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+   const reduceStock=db.prepare('UPDATE products SET stock=stock-? WHERE id=?');
+   for(const x of prepared) {
+    addLine.run(inv.lastInsertRowid,x.p.id,x.name,x.qty,x.rate,18,'INCLUDING',0,x.base,x.tax,x.gross);
+    reduceStock.run(x.qty,x.p.id);
+   }
+  }
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+ }
+} catch(e) { console.error('MAHUR Social Service cleaning invoice seed failed:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
