@@ -451,6 +451,28 @@ try {
  }
 } catch(e) { console.error('MAHUR ₹1,500 invoice correction:',e.message); }
 
+
+// MAHUR invoice GST correction: First Aid Box and Cotton Roll are 5% total GST.
+try {
+ const inv=db.prepare("SELECT id FROM invoices WHERE invoice_no = ?").get('PME-2026-626');
+ if(inv) {
+  const rows=db.prepare("SELECT * FROM invoice_items WHERE invoice_id = ? AND name IN (?, ?)").all(inv.id,'First Aid Box','Cotton Roll');
+  const upd=db.prepare("UPDATE invoice_items SET gst = 5, taxable = ?, tax = ?, total = ? WHERE id = ?");
+  for(const row of rows) {
+   const gross=(Number(row.qty)||0)*(Number(row.rate)||0)-(Number(row.discount)||0);
+   const base=gross/1.05;
+   upd.run(base,gross-base,gross,row.id);
+  }
+  if(rows.length) {
+   const all=db.prepare('SELECT * FROM invoice_items WHERE invoice_id = ?').all(inv.id);
+   let subtotal=0,taxable=0,tax=0;
+   for(const row of all){subtotal+=(Number(row.qty)||0)*(Number(row.rate)||0);taxable+=Number(row.taxable)||0;tax+=Number(row.tax)||0;}
+   const total=Math.round(taxable+tax);
+   db.prepare('UPDATE invoices SET subtotal=?, taxable=?, cgst=?, sgst=?, igst=0, roundoff=?, total=? WHERE id=?').run(subtotal,taxable,tax/2,tax/2,total-taxable-tax,total,inv.id);
+  }
+ }
+} catch(e) { console.error('MAHUR GST fix failed',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
