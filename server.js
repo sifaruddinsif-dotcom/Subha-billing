@@ -22,8 +22,9 @@ CREATE TABLE IF NOT EXISTS payments(id INTEGER PRIMARY KEY AUTOINCREMENT,custome
 `);
 try{db.exec("ALTER TABLE invoice_items ADD COLUMN gst_mode TEXT DEFAULT 'EXCLUDING'");}catch(e){}
 const defaults={business_name:'P.M. ENTERPRISE',tagline:'GST Tax Invoice',gstin:'18BKXPA2291M1ZJ',address:'HAFLONG BAZAR MASJID ROAD. DIMA HASAO DISTRICT ASSAM 788819',phone:'',email:'',invoice_prefix:'PME',state:'Assam',bank_name:'Central Bank of India',bank_account:'5408691136',ifsc:'CBIN0284634',branch:'Haflong'};
-const insSet=db.prepare('INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)'); for(const [k,v] of Object.entries(defaults)) insSet.run(k,v);
-const updSet=db.prepare('UPDATE settings SET value=? WHERE key=?'); for(const [k,v] of Object.entries(defaults)) updSet.run(v,k);
+// Seed defaults only when a setting is missing. Never overwrite saved business settings on restart.
+const insSet=db.prepare('INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)');
+for(const [k,v] of Object.entries(defaults)) insSet.run(k,v);
 const adminEmail=process.env.ADMIN_EMAIL||'admin@subhabilling.com';
 if(!db.prepare('SELECT id FROM users WHERE email=?').get(adminEmail)){db.prepare('INSERT INTO users(name,email,password,role) VALUES(?,?,?,?)').run('Admin',adminEmail,bcrypt.hashSync(process.env.ADMIN_PASSWORD||'ChangeMe123!',10),'admin');}
 
