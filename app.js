@@ -33,6 +33,9 @@ state={
 };
 
 const api=async(path,opt={})=>{
+  if (window.location.protocol === 'file:') {
+    throw Error('SUBHA BILLING is opened directly as a file. Login cannot connect this way. Close this tab and double-click START_SUBHA_BILLING_OFFLINE.bat in the extracted folder, then open http://localhost:3000.');
+  }
   opt.headers={
     'Content-Type':'application/json',
     ...(opt.headers||{})
@@ -40,7 +43,12 @@ const api=async(path,opt={})=>{
 
   if(token) opt.headers.Authorization='Bearer '+token;
 
-  const r=await fetch('/api'+path,opt);
+  let r;
+  try {
+    r=await fetch('/api'+path,opt);
+  } catch (e) {
+    throw Error('Cannot connect to SUBHA BILLING server. Start it with START_SUBHA_BILLING_OFFLINE.bat and open http://localhost:3000.');
+  }
   const d=await r.json().catch(()=>({}));
 
   if(!r.ok) throw Error(d.error||'Request failed');
