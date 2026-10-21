@@ -8,8 +8,10 @@ module.exports=function(app,db,auth,settings,nextNo,bcrypt){
    state:'Assam',
    invoice_prefix:'INV'
  };
- const setBusiness=db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
- for(const [k,v] of Object.entries(permanentSettings)) setBusiness.run(k,v); setBusiness.run('price_includes_gst','1');
+ // Seed defaults only when missing; preserve user-edited company settings across restarts.
+ const setBusiness=db.prepare('INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)');
+ for(const [k,v] of Object.entries(permanentSettings)) setBusiness.run(k,v);
+ setBusiness.run('price_includes_gst','1');
  const defaultCustomerName='MAHUR HIGH SECONDARY SCHOOL';
  let defaultCustomer=db.prepare('SELECT id FROM customers WHERE name=? ORDER BY id LIMIT 1').get(defaultCustomerName);
  if(!defaultCustomer){

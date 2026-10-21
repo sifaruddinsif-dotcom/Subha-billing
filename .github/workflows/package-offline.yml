@@ -2,17 +2,36 @@ name: Build SUBHA BILLING Offline ZIP
 
 on:
   push:
-    branches: [main]
+    branches: [main, offline-stability-fixes]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   package:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create ZIP
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
         run: |
-          zip -r SUBHA_BILLING_OFFLINE.zip . -x ".git/*" ".github/*" "node_modules/*" "*.db"
+          node --check server.js
+          node --check server-enhancements.js
+          node --check app.js
+          node --check enhancements.js
+          node --check tests/smoke-test.js
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run billing smoke tests
+        run: npm test
+      - name: Validate package manifest
+        run: node -e "const p=require('./package.json'); if(!p.scripts || !p.scripts.start || !p.scripts.test) process.exit(1); console.log('package.json OK')"
+      - name: Create offline ZIP
+        run: |
+          zip -r SUBHA_BILLING_OFFLINE.zip . -x ".git/*" ".github/*" "node_modules/*" "*.db" "*.sqlite" "*.sqlite3"
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
