@@ -1,1 +1,23 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SUBHA BILLING</title><link rel="stylesheet" href="style.css"></head><body><div id="app"></div><script src="app.js?v=20260920-1035"></script><script src="enhancements.js?v=20260921-1"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SUBHA BILLING — Start</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111827;color:#f8fafc;font:16px/1.5 Arial,sans-serif;min-height:100vh;display:grid;place-items:center;padding:24px}.card{max-width:680px;width:100%;background:#1f2937;border:1px solid #374151;border-radius:20px;padding:30px;box-shadow:0 18px 60px #0005}h1{margin:0;color:#fbbf24}h2{margin-top:28px}p,li{color:#d1d5db}.step{padding:12px 14px;margin:10px 0;background:#111827;border-radius:10px}a{color:#fbbf24;word-break:break-word}.note{color:#fbbf24;font-weight:bold}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>SUBHA BILLING</h1><p>Smart Billing. Premium Business.</p>
+<div id="message"></div>
+</main>
+<script>
+const message=document.getElementById('message');
+if(location.protocol==='file:'){
+ message.innerHTML='<h2>Start the billing server first</h2><p class="note">This page cannot run the billing system by itself.</p><div class="step"><b>1.</b> Close this browser tab.</div><div class="step"><b>2.</b> In this extracted folder, double-click <b>INSTALL_SUBHA_BILLING_OFFLINE.bat</b> once. Node.js 20+ and internet are required for first setup.</div><div class="step"><b>3.</b> When setup finishes, double-click <b>START_SUBHA_BILLING_OFFLINE.bat</b>. Keep its black window open.</div><div class="step"><b>4.</b> Open <a href="http://localhost:3000">http://localhost:3000</a> in Chrome.</div><p>If either BAT file shows an error, take a photo of the black window and use it to troubleshoot.</p>';
+}else{
+ message.innerHTML='<h2>Open the application</h2><p>Use the local server address:</p><p><a href="http://localhost:3000">http://localhost:3000</a></p>';
+}
+</script>
+</body></html>
