@@ -721,6 +721,50 @@ try {
  }
 } catch(e) { console.error('Library and Literary Club catalogue seed:', e.message); }
 
+
+/* Draft Library and Literary Club invoice for MAHUR HIGHER SECONDARY SCHOOL; GST-inclusive rates, verify classification before issue. */
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName='mahur_library_literary_club_invoice_2000_20261023_v1';
+ if (!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName)) {
+  const invoiceNo='PME/2026/27/624';
+  if (!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(invoiceNo)) {
+   let customer=db.prepare('SELECT * FROM customers WHERE name=?').get('M/s. MAHUR HIGHER SECONDARY SCHOOL');
+   if (!customer) {
+    const c=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run('M/s. MAHUR HIGHER SECONDARY SCHOOL','Dima Hasao, Assam - 788830','Assam');
+    customer=db.prepare('SELECT * FROM customers WHERE id=?').get(c.lastInsertRowid);
+   } else {
+    db.prepare('UPDATE customers SET address=?,state=? WHERE id=?').run('Dima Hasao, Assam - 788830','Assam',customer.id);
+   }
+   const lines=[
+    {sku:'LLC-20261023-PLASTIC-FOLDER',name:'Plastic Folder',hsn:'3926',gst:18,qty:15,rate:25},
+    {sku:'LLC-20261023-COLOUR-CHART-PAPER',name:'Colour Chart Paper',hsn:'4802',gst:5,qty:10,rate:20},
+    {sku:'LLC-20261023-DICTIONARY',name:'Dictionary (Printed Book)',hsn:'4901',gst:0,qty:1,rate:285},
+    {sku:'LLC-20261023-WHITE-DRAWING-SHEET',name:'White Drawing Sheet',hsn:'4802',gst:5,qty:10,rate:10},
+    {sku:'LLC-20261023-COLOUR-PENCIL-SET',name:'Colour Pencil Set',hsn:'9609',gst:0,qty:2,rate:100},
+    {sku:'LLC-20261023-FABER-COLOUR-SET',name:'Faber-Castell Colour Set',hsn:'9609',gst:0,qty:2,rate:220},
+    {sku:'LLC-20261023-SKETCH-PEN-SET',name:'Sketch Pen Set',hsn:'9608',gst:18,qty:5,rate:50},
+    {sku:'LLC-20261023-PLASTIC-DRAWING-PLATES',name:'Plastic Drawing Plates',hsn:'3926',gst:18,qty:5,rate:30}
+   ];
+   const prepared=lines.map(x=>{
+    const p=db.prepare('SELECT * FROM products WHERE sku=?').get(x.sku);
+    if(!p) throw new Error('Missing product '+x.name);
+    const gross=x.qty*x.rate, base=x.gst>0?gross/(1+x.gst/100):gross;
+    return {...x,p,gross,base,tax:gross-base};
+   });
+   const grossTotal=prepared.reduce((s,x)=>s+x.gross,0);
+   if(Math.abs(grossTotal-2000)>0.001) throw new Error('Draft invoice does not total ₹2,000');
+   const taxable=prepared.reduce((s,x)=>s+x.base,0);
+   const tax=prepared.reduce((s,x)=>s+x.tax,0);
+   const inv=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(invoiceNo,customer.id,grossTotal,0,taxable,tax/2,tax/2,0,0,grossTotal,0,'Pending','Credit','Draft invoice; GST-inclusive rates; verify HSN/GST classification before issuing.','2026-10-23 00:00:00');
+   const addLine=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+   for(const x of prepared) addLine.run(inv.lastInsertRowid,x.p.id,x.name,x.qty,x.rate,x.gst,'INCLUDING',0,x.base,x.tax,x.gross);
+  }
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+ }
+} catch(e) { console.error('MAHUR Library and Literary Club invoice seed:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
