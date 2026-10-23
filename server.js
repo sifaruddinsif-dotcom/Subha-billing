@@ -690,6 +690,37 @@ try {
  }
 } catch(e) { console.error('Health Unit stationery invoice seed:',e.message); }
 
+
+// Library and Literary Club product catalogue. Adds products only; does not create an invoice or assume opening stock.
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName = 'library_literary_club_catalogue_20261023_v1';
+ if (!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName)) {
+  const items = [
+   {name:'Plastic Folder',sku:'LLC-20261023-PLASTIC-FOLDER',unit:'PCS',hsn:'3926',gst:18,rate:25},
+   {name:'Colour Chart Paper',sku:'LLC-20261023-COLOUR-CHART-PAPER',unit:'SHEET',hsn:'4802',gst:5,rate:20},
+   {name:'Dictionary (Printed Book)',sku:'LLC-20261023-DICTIONARY',unit:'PCS',hsn:'4901',gst:0,rate:285},
+   {name:'White Drawing Sheet',sku:'LLC-20261023-WHITE-DRAWING-SHEET',unit:'SHEET',hsn:'4802',gst:5,rate:10},
+   {name:'Colour Pencil Set',sku:'LLC-20261023-COLOUR-PENCIL-SET',unit:'SET',hsn:'9609',gst:0,rate:100},
+   {name:'Faber-Castell Colour Set',sku:'LLC-20261023-FABER-COLOUR-SET',unit:'SET',hsn:'9609',gst:0,rate:220},
+   {name:'Sketch Pen Set',sku:'LLC-20261023-SKETCH-PEN-SET',unit:'SET',hsn:'9608',gst:18,rate:50},
+   {name:'Plastic Drawing Plates',sku:'LLC-20261023-PLASTIC-DRAWING-PLATES',unit:'PCS',hsn:'3926',gst:18,rate:30}
+  ];
+  const find = db.prepare('SELECT id FROM products WHERE sku=? OR name=?');
+  const add = db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)');
+  const update = db.prepare('UPDATE products SET category=?,unit=?,hsn=?,gst=?,sale_price=? WHERE id=?');
+  const tx = db.transaction(() => {
+   for (const p of items) {
+    const existing = find.get(p.sku,p.name);
+    if (!existing) add.run(p.name,p.sku,'Library and Literary Club',p.unit,p.hsn,0,p.rate,p.gst,0,0);
+    else update.run('Library and Literary Club',p.unit,p.hsn,p.gst,p.rate,existing.id);
+   }
+   db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+  });
+  tx();
+ }
+} catch(e) { console.error('Library and Literary Club catalogue seed:', e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
