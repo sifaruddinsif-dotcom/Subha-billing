@@ -1356,37 +1356,39 @@ function renderInvoiceModal(
 
             <td>
 
-              <select
+              <input
+                type="search"
+                list="invoice-product-options-${i}"
+                class="invoice-product-search"
+                placeholder="Search product name..."
+                autocomplete="off"
+                value="${((products.find(p=>String(p.id)===String(r.product_id))||{}).name)||''}"
+                oninput="
+                  const q=this.value.trim().toLocaleLowerCase();
+                  const found=state.products.find(p=>p.name.toLocaleLowerCase()===q);
+                  if(found){
+                    window._invoiceRows[${i}].product_id=found.id;
+                    window._invoiceRows[${i}].rate=Number(found.sale_price)||0;
+                    window._invoiceRows[${i}].gst=Number(found.gst)||0;
+                    renderInvoiceModal(state.customers,state.products,window._invoiceRows);
+                    updateInvoiceTotals(window._invoiceRows);
+                  }
+                "
                 onchange="
-                  window._invoiceRows[${i}].product_id=this.value;
-                  window._invoiceRows[${i}].rate=Number(
-                    this.selectedOptions[0].dataset.rate||0
-                  );
-                  window._invoiceRows[${i}].gst=Number(
-                    this.selectedOptions[0].dataset.gst||18
-                  );
-                  renderInvoiceModal(
-                    state.customers,
-                    state.products,
-                    window._invoiceRows
-                  )
+                  const q=this.value.trim().toLocaleLowerCase();
+                  const found=state.products.find(p=>p.name.toLocaleLowerCase()===q || (p.name+' — '+p.sale_price).toLocaleLowerCase()===q);
+                  if(found){
+                    window._invoiceRows[${i}].product_id=found.id;
+                    window._invoiceRows[${i}].rate=Number(found.sale_price)||0;
+                    window._invoiceRows[${i}].gst=Number(found.gst)||0;
+                    renderInvoiceModal(state.customers,state.products,window._invoiceRows);
+                    updateInvoiceTotals(window._invoiceRows);
+                  }
                 "
               >
-
-                ${products.map(p=>`
-
-                  <option
-                    data-rate="${p.sale_price}"
-                    data-gst="${p.gst}"
-                    value="${p.id}"
-                    ${p.id==r.product_id?'selected':''}
-                  >
-                    ${p.name} — ${p.sale_price}
-                  </option>
-
-                `).join('')}
-
-              </select>
+              <datalist id="invoice-product-options-${i}">
+                ${products.map(p=>`<option value="${p.name}" label="Rate ₹${p.sale_price} · GST ${p.gst}%"></option>`).join('')}
+              </datalist>
 
             </td>
 
