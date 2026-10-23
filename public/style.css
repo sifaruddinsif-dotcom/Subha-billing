@@ -1723,3 +1723,18 @@ button{
 .invoice-print.tally-invoice table.tally-items thead th{
   border-bottom:1px solid #111!important;
 }
+
+/* Approved SUBHA BILLING invoice reference: item rows use vertical separators only. */
+.invoice-print.tally-invoice .tally-items tbody td{
+  border-top:0!important;
+  border-bottom:0!important;
+  border-left:1px solid #111!important;
+  border-right:1px solid #111!important;
+}
+.invoice-print.tally-invoice .tally-items tbody tr{
+  border-top:0!important;
+  border-bottom:0!important;
+}
+.invoice-print.tally-invoice .tally-items thead th{
+  border:1px solid #111!important;
+}
