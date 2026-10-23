@@ -1738,3 +1738,15 @@ button{
 .invoice-print.tally-invoice .tally-items thead th{
   border:1px solid #111!important;
 }
+
+/* Mobile-friendly searchable product picker for invoice entry */
+.invoice-product-picker{position:relative;min-width:150px;width:100%}
+.invoice-product-picker .invoice-product-search{width:100%;padding-left:30px!important;box-sizing:border-box}
+.invoice-product-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:1;font-size:20px;color:#b88922;pointer-events:none}
+.invoice-product-results{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:9999;max-height:260px;overflow-y:auto;background:#fff;color:#171717;border:1px solid #d6d6d6;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.24)}
+.invoice-product-option{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:11px 10px;border:0;border-bottom:1px solid #e5e5e5;background:#fff;color:#171717;text-align:left;font:inherit;cursor:pointer}
+.invoice-product-option:last-child{border-bottom:0}
+.invoice-product-option span{font-weight:600;overflow-wrap:anywhere}
+.invoice-product-option small{white-space:nowrap;color:#555;font-size:11px}
+.invoice-product-option:active{background:#fff3ce}
+.invoice-product-empty{padding:12px;color:#666;font-size:13px}
