@@ -1349,37 +1349,16 @@ function renderInvoiceModal(
 
             <td>
 
-              <select
-                onchange="
-                  window._invoiceRows[${i}].product_id=this.value;
-                  window._invoiceRows[${i}].rate=Number(
-                    this.selectedOptions[0].dataset.rate||0
-                  );
-                  window._invoiceRows[${i}].gst=Number(
-                    this.selectedOptions[0].dataset.gst||18
-                  );
-                  renderInvoiceModal(
-                    state.customers,
-                    state.products,
-                    window._invoiceRows
-                  )
-                "
-              >
-
-                ${products.map(p=>`
-
-                  <option
-                    data-rate="${p.sale_price}"
-                    data-gst="${p.gst}"
-                    value="${p.id}"
-                    ${p.id==r.product_id?'selected':''}
-                  >
-                    ${p.name} — ${p.sale_price}
-                  </option>
-
-                `).join('')}
-
-              </select>
+              <div class="invoice-product-picker">
+                <span class="invoice-product-search-icon" aria-hidden="true">⌕</span>
+                <input type="search" class="invoice-product-search" placeholder="Search product name..." autocomplete="off"
+                  value="${invoiceProductEscape(((products.find(p=>String(p.id)===String(r.product_id))||{}).name)||'')}"
+                  onfocus="renderProductSuggestions(${i},this.value)"
+                  oninput="renderProductSuggestions(${i},this.value)"
+                  onkeydown="if(event.key==='Escape'){const b=document.getElementById('invoice-product-results-${i}');if(b)b.style.display='none';}"
+                >
+                <div class="invoice-product-results" id="invoice-product-results-${i}" style="display:none"></div>
+              </div>
 
             </td>
 
