@@ -598,6 +598,39 @@ try {
  }
 } catch(e) { console.error('Handwritten stationery catalogue seed:', e.message); }
 
+
+// Proposed stationery selling rates from the handwritten list; GST-inclusive rates.
+// Quantity assumptions are for a draft ₹9,500 breakup only; confirm before issuing an invoice.
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName = 'handwritten_stationery_rates_9500_20261023_v1';
+ const rates = [
+  {sku:'NOTE-20261023-A4-PAPER',name:'A4 Size Paper',unit:'REAM',hsn:'4802',gst:18,qty:4,rate:450},
+  {sku:'NOTE-20261023-DISTA-PAPER',name:'Dista Paper',unit:'REAM',hsn:'4802',gst:18,qty:2,rate:350},
+  {sku:'NOTE-20261023-EXERCISE-PLAIN',name:'Exercise Book / Plain',unit:'BUNDLE',hsn:'48202000',gst:0,qty:1,rate:1200},
+  {sku:'NOTE-20261023-RULED-BOOK',name:'Ruled Exercise Book',unit:'BUNDLE',hsn:'48202000',gst:0,qty:1,rate:1200},
+  {sku:'NOTE-20261023-SMALL-STAPLES',name:'Small Staples / Stapler Pins',unit:'BOX',hsn:'83052000',gst:18,qty:2,rate:150},
+  {sku:'NOTE-20261023-GUM',name:'Gum / Office Adhesive',unit:'PCS',hsn:'3506',gst:18,qty:15,rate:40},
+  {sku:'NOTE-20261023-COVER-FILE',name:'Cover File',unit:'PCS',hsn:'48203000',gst:18,qty:20,rate:30},
+  {sku:'NOTE-20261023-REGISTER',name:'Register',unit:'PCS',hsn:'48201010',gst:18,qty:10,rate:100},
+  {sku:'NOTE-20261023-ATTENDANCE-REGISTER',name:'Attendance Register',unit:'PCS',hsn:'48201010',gst:18,qty:5,rate:180},
+  {sku:'NOTE-20261023-STAPLE-PINS',name:'Staple Pins',unit:'BOX',hsn:'83052000',gst:18,qty:10,rate:25},
+  {sku:'NOTE-20261023-BALL-PEN',name:'Ball Pen',unit:'PCS',hsn:'96081099',gst:18,qty:50,rate:15},
+  {sku:'NOTE-20261023-ERASER',name:'Rubber Eraser',unit:'PCS',hsn:'40169200',gst:0,qty:40,rate:5}
+ ];
+ const find = db.prepare('SELECT id FROM products WHERE sku=? OR name=?');
+ const add = db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)');
+ const update = db.prepare('UPDATE products SET category=?,unit=?,hsn=?,gst=?,sale_price=? WHERE id=?');
+ for (const p of rates) {
+  const existing = find.get(p.sku,p.name);
+  if (!existing) add.run(p.name,p.sku,'Stationery',p.unit,p.hsn,0,p.rate,p.gst,0,0);
+  else update.run('Stationery',p.unit,p.hsn,p.gst,p.rate,existing.id);
+ }
+ if (!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName)) {
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+ }
+} catch(e) { console.error('Handwritten stationery rates seed:', e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
