@@ -1260,11 +1260,13 @@ function renderProductSuggestions(index, query){
   if(!box) return;
   const q=String(query||'').trim().toLocaleLowerCase();
   const list=(state.products||[]).filter(p=>!q || String(p.name||'').toLocaleLowerCase().includes(q) || String(p.sku||'').toLocaleLowerCase().includes(q) || String(p.hsn||'').toLocaleLowerCase().includes(q));
+  box.style.display='block';
+  box.setAttribute('role','listbox');
   if(!list.length){
     box.innerHTML='<div class="invoice-product-empty">No matching products</div>';
     return;
   }
-  box.innerHTML=list.slice(0,60).map(p=>'<button type="button" class="invoice-product-option" onclick="selectInvoiceProduct('+index+','+Number(p.id)+')"><span>'+String(p.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span><small>₹'+Number(p.sale_price||0).toFixed(2)+' · GST '+Number(p.gst||0)+'%</small></button>').join('');
+  box.innerHTML=list.slice(0,60).map(p=>'<button type="button" role="option" class="invoice-product-option" onclick="selectInvoiceProduct('+index+','+Number(p.id)+')"><span>'+String(p.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span><small>₹'+Number(p.sale_price||0).toFixed(2)+' · HSN '+String(p.hsn||'-')+' · GST '+Number(p.gst||0)+'%</small></button>').join('');
 }
 function selectInvoiceProduct(index, productId){
   const p=(state.products||[]).find(x=>Number(x.id)===Number(productId));
