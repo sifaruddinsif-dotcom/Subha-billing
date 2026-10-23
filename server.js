@@ -631,6 +631,65 @@ try {
  }
 } catch(e) { console.error('Handwritten stationery rates seed:', e.message); }
 
+
+// One-time draft GST-inclusive stationery invoice for Health Unit, New Haflong.
+// Proposed quantities/rates total ₹9,500; verify HSN/GST and commercial rates before statutory issue.
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName = 'health_unit_new_haflong_stationery_invoice_9500_v1';
+ const invoiceNo = 'PME-2026-628';
+ if (!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName) &&
+     !db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(invoiceNo)) {
+  let customer = db.prepare('SELECT * FROM customers WHERE name=?').get('Health Unit');
+  if (!customer) {
+   const c = db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run('Health Unit','New Haflong','Assam');
+   customer = db.prepare('SELECT * FROM customers WHERE id=?').get(c.lastInsertRowid);
+  } else {
+   db.prepare('UPDATE customers SET address=?,state=? WHERE id=?').run('New Haflong','Assam',customer.id);
+  }
+  const lines = [
+   {sku:'NOTE-20261023-A4-PAPER',name:'A4 Size Paper',unit:'REAM',hsn:'4802',gst:18,qty:4,rate:450},
+   {sku:'NOTE-20261023-DISTA-PAPER',name:'Dista Paper',unit:'REAM',hsn:'4802',gst:18,qty:2,rate:350},
+   {sku:'NOTE-20261023-EXERCISE-PLAIN',name:'Exercise Book / Plain',unit:'BUNDLE',hsn:'48202000',gst:0,qty:1,rate:1200},
+   {sku:'NOTE-20261023-RULED-BOOK',name:'Ruled Exercise Book',unit:'BUNDLE',hsn:'48202000',gst:0,qty:1,rate:1200},
+   {sku:'NOTE-20261023-SMALL-STAPLES',name:'Small Staples / Stapler Pins',unit:'BOX',hsn:'83052000',gst:18,qty:2,rate:150},
+   {sku:'NOTE-20261023-GUM',name:'Gum / Office Adhesive',unit:'PCS',hsn:'3506',gst:18,qty:15,rate:40},
+   {sku:'NOTE-20261023-COVER-FILE',name:'Cover File',unit:'PCS',hsn:'48203000',gst:18,qty:20,rate:30},
+   {sku:'NOTE-20261023-REGISTER',name:'Register',unit:'PCS',hsn:'48201010',gst:18,qty:10,rate:100},
+   {sku:'NOTE-20261023-ATTENDANCE-REGISTER',name:'Attendance Register',unit:'PCS',hsn:'48201010',gst:18,qty:5,rate:180},
+   {sku:'NOTE-20261023-STAPLE-PINS',name:'Staple Pins',unit:'BOX',hsn:'83052000',gst:18,qty:10,rate:25},
+   {sku:'NOTE-20261023-BALL-PEN',name:'Ball Pen',unit:'PCS',hsn:'96081099',gst:18,qty:50,rate:15},
+   {sku:'NOTE-20261023-ERASER',name:'Rubber Eraser',unit:'PCS',hsn:'40169200',gst:0,qty:40,rate:5}
+  ];
+  const prepared = lines.map(x => {
+   let p = db.prepare('SELECT * FROM products WHERE sku=?').get(x.sku);
+   if (!p) {
+    const r = db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)')
+      .run(x.name,x.sku,'Stationery',x.unit,x.hsn,0,x.rate,x.gst,0,0);
+    p = db.prepare('SELECT * FROM products WHERE id=?').get(r.lastInsertRowid);
+   } else {
+    db.prepare('UPDATE products SET name=?,category=?,unit=?,hsn=?,gst=?,sale_price=? WHERE id=?')
+      .run(x.name,'Stationery',x.unit,x.hsn,x.gst,x.rate,p.id);
+   }
+   const gross = x.qty*x.rate;
+   const base = x.gst > 0 ? gross/(1+x.gst/100) : gross;
+   return {...x,p,gross,base,tax:gross-base};
+  });
+  const grossTotal = prepared.reduce((s,x)=>s+x.gross,0);
+  if (Math.abs(grossTotal-9500)>0.001) throw new Error('Health Unit invoice does not total ₹9,500');
+  const taxable = prepared.reduce((s,x)=>s+x.base,0);
+  const cgst = prepared.reduce((s,x)=>s+x.tax/2,0);
+  const sgst = cgst;
+  const total = Math.round(taxable+cgst+sgst);
+  const roundoff = grossTotal-total;
+  const inv = db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+   .run(invoiceNo,customer.id,grossTotal,0,taxable,cgst,sgst,0,roundoff,grossTotal,0,'Pending','Credit','Draft proposed rates; GST-inclusive; verify HSN/GST before issuing.','2026-10-23 00:00:00');
+  const addLine = db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+  for (const x of prepared) addLine.run(inv.lastInsertRowid,x.p.id,x.name,x.qty,x.rate,x.gst,'INCLUDING',0,x.base,x.tax,x.gross);
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+ }
+} catch(e) { console.error('Health Unit stationery invoice seed:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
