@@ -1255,6 +1255,27 @@ function updateInvoiceTotals(rows){
   if(tg) tg.textContent=money(tax);
 }
 
+function renderProductSuggestions(index, query){
+  const box=document.getElementById('invoice-product-results-'+index);
+  if(!box) return;
+  const q=String(query||'').trim().toLocaleLowerCase();
+  const list=(state.products||[]).filter(p=>!q || String(p.name||'').toLocaleLowerCase().includes(q) || String(p.sku||'').toLocaleLowerCase().includes(q) || String(p.hsn||'').toLocaleLowerCase().includes(q));
+  if(!list.length){
+    box.innerHTML='<div class="invoice-product-empty">No matching products</div>';
+    return;
+  }
+  box.innerHTML=list.slice(0,60).map(p=>'<button type="button" class="invoice-product-option" onclick="selectInvoiceProduct('+index+','+Number(p.id)+')"><span>'+String(p.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span><small>₹'+Number(p.sale_price||0).toFixed(2)+' · GST '+Number(p.gst||0)+'%</small></button>').join('');
+}
+function selectInvoiceProduct(index, productId){
+  const p=(state.products||[]).find(x=>Number(x.id)===Number(productId));
+  if(!p || !window._invoiceRows || !window._invoiceRows[index]) return;
+  window._invoiceRows[index].product_id=p.id;
+  window._invoiceRows[index].rate=Number(p.sale_price)||0;
+  window._invoiceRows[index].gst=Number(p.gst)||0;
+  renderInvoiceModal(state.customers,state.products,window._invoiceRows);
+  updateInvoiceTotals(window._invoiceRows);
+}
+
 function renderInvoiceModal(
   customers,
   products,
@@ -1356,39 +1377,20 @@ function renderInvoiceModal(
 
             <td>
 
-              <input
-                type="search"
-                list="invoice-product-options-${i}"
-                class="invoice-product-search"
-                placeholder="Search product name..."
-                autocomplete="off"
-                value="${((products.find(p=>String(p.id)===String(r.product_id))||{}).name)||''}"
-                oninput="
-                  const q=this.value.trim().toLocaleLowerCase();
-                  const found=state.products.find(p=>p.name.toLocaleLowerCase()===q);
-                  if(found){
-                    window._invoiceRows[${i}].product_id=found.id;
-                    window._invoiceRows[${i}].rate=Number(found.sale_price)||0;
-                    window._invoiceRows[${i}].gst=Number(found.gst)||0;
-                    renderInvoiceModal(state.customers,state.products,window._invoiceRows);
-                    updateInvoiceTotals(window._invoiceRows);
-                  }
-                "
-                onchange="
-                  const q=this.value.trim().toLocaleLowerCase();
-                  const found=state.products.find(p=>p.name.toLocaleLowerCase()===q || (p.name+' — '+p.sale_price).toLocaleLowerCase()===q);
-                  if(found){
-                    window._invoiceRows[${i}].product_id=found.id;
-                    window._invoiceRows[${i}].rate=Number(found.sale_price)||0;
-                    window._invoiceRows[${i}].gst=Number(found.gst)||0;
-                    renderInvoiceModal(state.customers,state.products,window._invoiceRows);
-                    updateInvoiceTotals(window._invoiceRows);
-                  }
-                "
-              >
-              <datalist id="invoice-product-options-${i}">
-                ${products.map(p=>`<option value="${p.name}" label="Rate ₹${p.sale_price} · GST ${p.gst}%"></option>`).join('')}
-              </datalist>
+              <div class="invoice-product-picker">
+                <span class="invoice-product-search-icon" aria-hidden="true">⌕</span>
+                <input
+                  type="search"
+                  class="invoice-product-search"
+                  placeholder="🔍 Search product..."
+                  autocomplete="off"
+                  value="${((products.find(p=>String(p.id)===String(r.product_id))||{}).name)||''}"
+                  onfocus="renderProductSuggestions(${i},this.value)"
+                  oninput="renderProductSuggestions(${i},this.value)"
+                  onkeydown="if(event.key==='Escape'){const box=document.getElementById('invoice-product-results-${i}');if(box)box.innerHTML='';}"
+                >
+                <div class="invoice-product-results" id="invoice-product-results-${i}"></div>
+              </div>
 
             </td>
 
