@@ -1750,3 +1750,18 @@ button{
 .invoice-product-option small{white-space:nowrap;color:#555;font-size:11px}
 .invoice-product-option:active{background:#fff3ce}
 .invoice-product-empty{padding:12px;color:#666;font-size:13px}
+
+
+/* Product search dropdown: visible, touch-friendly and layered above invoice fields */
+.invoice-product-picker{position:relative;min-width:0;width:100%;isolation:isolate}
+.invoice-product-picker .invoice-product-search{width:100%;min-width:0;padding-left:34px!important;min-height:42px;font-size:14px!important}
+.invoice-product-results{display:none;position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:10050;max-height:min(48vh,360px);overflow-y:auto;overscroll-behavior:contain;background:#fff;color:#111827;border:2px solid #d5a329;border-radius:10px;box-shadow:0 14px 35px rgba(0,0,0,.38);-webkit-overflow-scrolling:touch}
+.invoice-product-option{min-height:54px;padding:10px 12px;gap:8px}
+.invoice-product-option span{font-size:14px;line-height:1.25}
+.invoice-product-option small{display:block;white-space:normal;text-align:right;font-size:11px;line-height:1.35}
+.invoice-product-option:focus,.invoice-product-option:hover{background:#e8f1ff;outline:none}
+@media(max-width:600px){
+ .invoice-product-results{max-height:45vh}
+ .invoice-product-option{align-items:flex-start;flex-direction:column}
+ .invoice-product-option small{text-align:left}
+}
