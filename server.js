@@ -765,6 +765,57 @@ try {
  }
 } catch(e) { console.error('MAHUR Library and Literary Club invoice seed:',e.message); }
 
+
+/* C.C.F. Haflong invoice: ₹9,500 GST-inclusive. Item-wise values are provisional because customer supplied no quantities/rates; verify before final issue. */
+try {
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const migrationName='ccf_haflong_invoice_9500_20261027_v1';
+ if (!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName)) {
+  const invoiceNo='PME-2026-CCF-001';
+  if (!db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(invoiceNo)) {
+   const customerName='C.C.F.';
+   let customer=db.prepare('SELECT * FROM customers WHERE name=?').get(customerName);
+   if (!customer) {
+    const c=db.prepare('INSERT INTO customers(name,address,state) VALUES(?,?,?)').run(customerName,'Haflong, Dima Hasao, Assam - 788819','Assam');
+    customer=db.prepare('SELECT * FROM customers WHERE id=?').get(c.lastInsertRowid);
+   } else {
+    db.prepare('UPDATE customers SET address=?,state=? WHERE id=?').run('Haflong, Dima Hasao, Assam - 788819','Assam',customer.id);
+   }
+   const lines=[
+    {sku:'CCF-20261027-REGISTER',name:'Register',hsn:'4820',gst:18,qty:1,rate:2500},
+    {sku:'CCF-20261027-HARPIC',name:'Harpic Toilet Cleaner',hsn:'3402',gst:18,qty:1,rate:2500},
+    {sku:'CCF-20261027-PHENYL',name:'Phenyl / Floor Cleaner',hsn:'3808',gst:18,qty:1,rate:2000},
+    {sku:'CCF-20261027-FS-PAPER',name:'FS Paper',hsn:'4802',gst:5,qty:1,rate:2500}
+   ];
+   const findProduct=db.prepare('SELECT * FROM products WHERE sku=? OR name=?');
+   const insertProduct=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)');
+   const updateProduct=db.prepare('UPDATE products SET hsn=?,gst=?,sale_price=? WHERE id=?');
+   const prepared=lines.map(x=>{
+    let p=findProduct.get(x.sku,x.name);
+    if(!p){
+     const r=insertProduct.run(x.name,x.sku,'CCF Invoice','PCS',x.hsn,0,x.rate,x.gst,1000,0);
+     p=db.prepare('SELECT * FROM products WHERE id=?').get(r.lastInsertRowid);
+    } else {
+     updateProduct.run(x.hsn,x.gst,x.rate,p.id);
+     p=db.prepare('SELECT * FROM products WHERE id=?').get(p.id);
+    }
+    const gross=x.qty*x.rate,base=x.gst>0?gross/(1+x.gst/100):gross;
+    return {...x,p,gross,base,tax:gross-base};
+   });
+   const grossTotal=prepared.reduce((a,x)=>a+x.gross,0);
+   if(Math.abs(grossTotal-9500)>0.001) throw new Error('CCF invoice total must be ₹9,500');
+   const taxable=prepared.reduce((a,x)=>a+x.base,0);
+   const tax=prepared.reduce((a,x)=>a+x.tax,0);
+   const roundoff=9500-(taxable+tax);
+   const inv=db.prepare('INSERT INTO invoices(invoice_no,customer_id,subtotal,discount,taxable,cgst,sgst,igst,roundoff,total,paid,status,payment_mode,notes,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(invoiceNo,customer.id,grossTotal,0,taxable,tax/2,tax/2,0,roundoff,9500,0,'Pending','Credit','Draft: ₹9,500 GST-inclusive. Item values are provisional allocations; confirm actual quantities, rates and GST classification before issuing.','2026-10-27 00:00:00');
+   const addLine=db.prepare('INSERT INTO invoice_items(invoice_id,product_id,name,qty,rate,gst,gst_mode,discount,taxable,tax,total) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+   for(const x of prepared) addLine.run(inv.lastInsertRowid,x.p.id,x.name,x.qty,x.rate,x.gst,'INCLUDING',0,x.base,x.tax,x.gross);
+  }
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+ }
+} catch(e) { console.error('C.C.F. Haflong invoice seed:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
