@@ -816,6 +816,28 @@ try {
  }
 } catch(e) { console.error('C.C.F. Haflong invoice seed:',e.message); }
 
+
+/* Normalize the C.C.F. invoice number to the same sequential format as the existing invoice list. */
+try {
+ const migrationName='ccf_invoice_number_format_fix_20261027_v1';
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ if (!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName)) {
+  const oldNo='PME-2026-CCF-001';
+  const correctNo='PME-2026-629';
+  const oldInvoice=db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(oldNo);
+  const numberTaken=db.prepare('SELECT id FROM invoices WHERE invoice_no=?').get(correctNo);
+  if (oldInvoice && !numberTaken) {
+   db.prepare('UPDATE invoices SET invoice_no=? WHERE id=?').run(correctNo,oldInvoice.id);
+   console.log('C.C.F. invoice number corrected to '+correctNo);
+  } else if (numberTaken) {
+   console.log('C.C.F. invoice number '+correctNo+' already exists; no duplicate created.');
+  } else {
+   console.error('C.C.F. invoice number fix: original invoice '+oldNo+' not found; no record changed.');
+  }
+  db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+ }
+} catch(e) { console.error('C.C.F. invoice number format fix:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
