@@ -1199,7 +1199,7 @@ async function newInvoice(){
 
     rows.push({
       product_id:products[0]?.id||'',
-      qty:1,
+      qty:6,
       rate:products[0]?.sale_price||0,
       gst:Number(products[0]?.gst)||18,
       gst_mode:'EXCLUDING',
@@ -1457,7 +1457,7 @@ function renderInvoiceModal(
         onclick="
           window._invoiceRows.push({
             product_id:state.products[0]?.id||'',
-            qty:1,
+            qty:6,
             rate:state.products[0]?.sale_price||0,
             gst:Number(state.products[0]?.gst)||18,
             gst_mode:'EXCLUDING',
@@ -2142,11 +2142,11 @@ async function purchase(){
 async function newPurchase(){
   const [suppliers,products]=await Promise.all([api('/suppliers'),api('/products')]);
   if(!products.length){alert('Add a product first.');return;}
-  window._purchaseRows=window._purchaseRows&&window._purchaseRows.length?window._purchaseRows:[{product_id:products[0].id,qty:1,rate:Number(products[0].purchase_price)||0,gst:Number(products[0].gst)||18}];
+  window._purchaseRows=window._purchaseRows&&window._purchaseRows.length?window._purchaseRows:[{product_id:products[0].id,qty:6,rate:Number(products[0].purchase_price)||0,gst:Number(products[0].gst)||18}];
   $('#modalbox').innerHTML=`<div class="toolbar"><h3>New Purchase</h3><button class="btn" onclick="closeModal()">×</button></div>
   <div class="formgrid"><div class="field"><label>Supplier</label><select id="psup"><option value="">Walk-in Supplier</option>${suppliers.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div class="field"><label>Payment</label><input id="ppaid" type="number" value="0" min="0"></div></div>
   <table class="invoice-items"><thead><tr><th>Product</th><th>Qty</th><th>Rate</th><th>GST %</th><th></th></tr></thead><tbody>${window._purchaseRows.map((r,i)=>`<tr><td><select onchange="window._purchaseRows[${i}].product_id=Number(this.value);window._purchaseRows[${i}].rate=Number(this.selectedOptions[0].dataset.rate||0);renderPurchaseRows(${JSON.stringify(suppliers)},${JSON.stringify(products)})">${products.map(p=>`<option data-rate="${p.purchase_price}" value="${p.id}" ${p.id==r.product_id?'selected':''}>${p.name}</option>`).join('')}</select></td><td><input type="number" min="0.01" value="${r.qty}" oninput="window._purchaseRows[${i}].qty=Number(this.value)||0"></td><td><input type="number" value="${r.rate}" oninput="window._purchaseRows[${i}].rate=Number(this.value)||0"></td><td><select onchange="window._purchaseRows[${i}].gst=Number(this.value)">${[0,5,12,18,28,40].map(g=>`<option value="${g}" ${g===Number(r.gst)?'selected':''}>${g}%</option>`).join('')}</select></td><td><button class="btn danger" onclick="window._purchaseRows.splice(${i},1);renderPurchaseRows(${JSON.stringify(suppliers)},${JSON.stringify(products)})">×</button></td></tr>`).join('')}</tbody></table>
-  <button class="btn" onclick="window._purchaseRows.push({product_id:products[0].id,qty:1,rate:Number(products[0].purchase_price)||0,gst:Number(products[0].gst)||18});renderPurchaseRows(${JSON.stringify(suppliers)},${JSON.stringify(products)})">＋ Add Item</button>
+  <button class="btn" onclick="window._purchaseRows.push({product_id:products[0].id,qty:6,rate:Number(products[0].purchase_price)||0,gst:Number(products[0].gst)||18});renderPurchaseRows(${JSON.stringify(suppliers)},${JSON.stringify(products)})">＋ Add Item</button>
   <button class="btn primary" onclick="savePurchase()">Save Purchase</button>`;
   openModal();
 }
