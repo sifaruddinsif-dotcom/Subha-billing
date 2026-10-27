@@ -838,6 +838,35 @@ try {
  }
 } catch(e) { console.error('C.C.F. invoice number format fix:',e.message); }
 
+
+/* Set C.C.F. invoice quantities to 6 while preserving each existing line total and the ₹9,500 grand total. */
+try {
+ const migrationName='ccf_invoice_qty_six_preserve_total_20261027_v1';
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ if (!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(migrationName)) {
+  const inv=db.prepare('SELECT id,total FROM invoices WHERE invoice_no=?').get('PME-2026-629');
+  if (inv) {
+   const items=db.prepare('SELECT id,qty,rate,total FROM invoice_items WHERE invoice_id=?').all(inv.id);
+   if (items.length) {
+    const update=db.prepare('UPDATE invoice_items SET qty=6, rate=? WHERE id=?');
+    const tx=db.transaction(()=>{
+     for (const item of items) {
+      const preservedLineTotal=Number(item.total)||Number(item.qty)*Number(item.rate);
+      update.run(preservedLineTotal/6,item.id);
+     }
+     db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(migrationName,new Date().toISOString());
+    });
+    tx();
+    console.log('C.C.F. invoice quantities set to 6; stored line totals and grand total preserved.');
+   } else {
+    console.error('C.C.F. quantity fix: invoice has no line items; no changes made.');
+   }
+  } else {
+   console.error('C.C.F. quantity fix: PME-2026-629 not found; no changes made.');
+  }
+ }
+} catch(e) { console.error('C.C.F. invoice quantity fix:',e.message); }
+
 app.use(express.static(path.join(__dirname,'public')));app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const HOST=process.env.HOST||'0.0.0.0';
 app.listen(PORT,HOST,()=>console.log(`SUBHA BILLING running on http://localhost:${PORT}`));
