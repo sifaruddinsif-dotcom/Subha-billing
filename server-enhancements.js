@@ -1,4 +1,29 @@
 module.exports=function(app,db,auth,settings,nextNo,bcrypt){
+
+ // One-time stationery catalogue addition requested: Plastic File, Ball Pen, and Note Pad.
+ // Note Pad is classified as a memo/letter pad (not an exercise notebook).
+ db.exec("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)");
+ const stationeryMigration='stationery_plastic_file_ball_pen_notepad_20261119_v1';
+ if(!db.prepare('SELECT name FROM app_migrations WHERE name=?').get(stationeryMigration)){
+   const items=[
+     {name:'Plastic File',sku:'ST-20261119-PLASTIC-FILE',unit:'PCS',hsn:'39261019',gst:5},
+     {name:'Ball Pen',sku:'ST-20261119-BALL-PEN',unit:'PCS',hsn:'96081099',gst:18},
+     {name:'Note Pad (Memo Pad)',sku:'ST-20261119-NOTE-PAD',unit:'PCS',hsn:'48201090',gst:18}
+   ];
+   const find=db.prepare('SELECT id FROM products WHERE sku=? OR name=?');
+   const add=db.prepare('INSERT INTO products(name,sku,category,unit,hsn,purchase_price,sale_price,gst,stock,min_stock) VALUES(?,?,?,?,?,?,?,?,?,?)');
+   const update=db.prepare('UPDATE products SET category=?,unit=?,hsn=?,gst=? WHERE id=?');
+   const tx=db.transaction(()=>{
+     for(const p of items){
+       const existing=find.get(p.sku,p.name);
+       if(!existing) add.run(p.name,p.sku,'Stationery',p.unit,p.hsn,0,0,p.gst,0,0);
+       else update.run('Stationery',p.unit,p.hsn,p.gst,existing.id);
+     }
+     db.prepare('INSERT INTO app_migrations(name,applied_at) VALUES(?,?)').run(stationeryMigration,new Date().toISOString());
+   });
+   tx();
+ }
+
  // SUBHA BILLING permanent business profile + default customer/product.
  const permanentSettings={
    business_name:'P.M. ENTERPRISE',
